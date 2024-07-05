@@ -1,0 +1,36 @@
+name: Enforce Git Flow
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  check-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Enforce Git Flow branch naming
+      run: |
+        branch_name=$(echo "${GITHUB_REF#refs/heads/}")
+        
+        if [[ "$branch_name" == "main" ]] || [[ "$branch_name" == "master" ]]; then
+          echo "Main or Master branch: $branch_name"
+        elif [[ "$branch_name" == "develop" ]]; then
+          echo "Develop branch: $branch_name"
+        elif [[ "$branch_name" == feature/* ]]; then
+          echo "Feature branch: $branch_name"
+        elif [[ "$branch_name" == release/* ]]; then
+          echo "Release branch: $branch_name"
+        elif [[ "$branch_name" == hotfix/* ]]; then
+          echo "Hotfix branch: $branch_name"
+        else
+          echo "Invalid branch name: $branch_name"
+          exit 1
+        fi
+
