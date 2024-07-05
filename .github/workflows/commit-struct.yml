@@ -1,40 +1,30 @@
-name: Enforce Commit Message Format
+name: Check Commit Message Format
 
 on:
-  push:
-    branches:
-      - '*'
   pull_request:
-    branches:
-      - '*'
+    types: [opened, synchronize, edited]
 
 jobs:
   check-commit-message:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v2
+
+    - name: Get commit messages
+      run: |
+        commits=$(jq -r '.commits[] | .message' < "$GITHUB_EVENT_PATH")
+        echo "$commits" > commit_messages.txt
+      shell: bash
 
     - name: Check commit messages
       run: |
-        commits=$(git log --format=%s --no-merges ${{ github.event.before }}..${{ github.sha }})
-        
-        echo "Checking commit messages..."
-        
-        invalid_commit_found=false
-
-        for commit in $commits; do
-          if ! [[ "$commit" =~ ^(FEAT|FIX):\ .* ]]; then
-            echo "Invalid commit message: $commit"
-            invalid_commit_found=true
-          fi
-        done
-
-        if $invalid_commit_found; then
-          echo "One or more commits do not follow the required format (FEAT: *Commit message* or FIX: *Commit message*)."
+        invalid_commits=$(grep -Ev '^(FEAT|FIX): .+' commit_messages.txt)
+        if [ -n "$invalid_commits" ]; then
+          echo "Invalid commit messages found:"
+          echo "$invalid_commits"
           exit 1
-        else
-          echo "All commit messages are valid."
         fi
+      shell: bash
 
