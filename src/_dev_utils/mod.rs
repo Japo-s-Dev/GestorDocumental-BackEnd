@@ -3,6 +3,7 @@
 mod dev_db;
 
 use crate::ctx::Ctx;
+use crate::model::task::Task;
 use crate::model::{self, ModelManager};
 use tokio::sync::OnceCell;
 use tracing::info;
@@ -36,3 +37,10 @@ pub async fn init_test() -> ModelManager {
 	mm.clone()
 }
 
+pub async fn seed_tasks(
+	ctx: &Ctx,
+	mm: &ModelManager,
+	titles: &[&str],
+) -> model::Result<Vec<Task>> {
+	todo!()
+}

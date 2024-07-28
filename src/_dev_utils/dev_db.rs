@@ -1,4 +1,3 @@
-
 use crate::ctx::Ctx;
 use crate::model::user::{User, UserBmc};
 use crate::model::ModelManager;
@@ -7,13 +6,15 @@ use sqlx::{Pool, Postgres};
 use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
+use tokio::time::sleep;
 use tracing::info;
 
 type Db = Pool<Postgres>;
 
 // NOTE: Hardcode to prevent deployed system db update.
-const PG_DEV_POSTGRES_URL: &str = "postgres://postgres:root@db:5432/gestor_documental";
-const PG_DEV_APP_URL: &str = "postgres://postgres:root@db:5432/gestor_documental";
+const PG_DEV_POSTGRES_URL: &str = "postgres://postgres:root@db:5432/postgres";
+const PG_DEV_APP_URL: &str =
+	"postgres://app_user:dev_password@db:5432/gestor_documental";
 
 // sql files
 const SQL_RECREATE_DB: &str = "sql/dev_initial/00-recreate-db.sql";
@@ -23,7 +24,6 @@ const DEMO_PWD: &str = "welcome";
 
 pub async fn init_dev_db() -> Result<(), Box<dyn std::error::Error>> {
 	info!("{:<12} - init_dev_db()", "FOR-DEV-ONLY");
-
 	// -- Create the app_db/app_user with the postgres user.
 	{
 		let root_db = new_db_pool(PG_DEV_POSTGRES_URL).await?;

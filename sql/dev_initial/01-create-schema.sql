@@ -73,11 +73,11 @@ CREATE TABLE
     );
 
 CREATE TABLE
-    USUARIO (
-        userId SERIAL PRIMARY KEY,
+    "user" (
+        id BIGSERIAL PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
         correo VARCHAR(50) UNIQUE NOT NULL,        
-        pwd VARCHAR(256) UNIQUE NOT NULL,
+        pwd VARCHAR(256),
         pwd_salt uuid NOT NULL DEFAULT gen_random_uuid(),
         token_salt uuid NOT NULL DEFAULT gen_random_uuid()
     );
@@ -101,7 +101,7 @@ CREATE TABLE
         userId INT NOT NULL,
         rolId INT NOT NULL,
         PRIMARY KEY (userId, rolId),
-        FOREIGN KEY (userId) REFERENCES USUARIO (userId) ON DELETE CASCADE,
+        FOREIGN KEY (userId) REFERENCES "user" (id) ON DELETE CASCADE,
         FOREIGN KEY (rolId) REFERENCES ROL (rolId) ON DELETE CASCADE
     );
 
@@ -127,5 +127,5 @@ CREATE TABLE
         token VARCHAR(50),
         PRIMARY KEY (idLog, userId),
         FOREIGN KEY (idLog) REFERENCES LOG_SESION (idLog) ON DELETE CASCADE,
-        FOREIGN KEY (userId) REFERENCES USUARIO (userId) ON DELETE CASCADE
+        FOREIGN KEY (userId) REFERENCES "user"(id) ON DELETE CASCADE
     );
