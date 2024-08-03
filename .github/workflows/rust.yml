@@ -22,7 +22,7 @@ jobs:
         echo "${ secrets.ENV_VARIABLES }" > .env
 
     - name: Build
-      run: cargo build --verbose
+      run: cargo build
     - name: Test
-      run: cargo test --verbose
+      run: cargo test
       
