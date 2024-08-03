@@ -16,12 +16,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Test
-      run: cargo test --verbose
     - name: Load variables
       run: 
         touch .env
         echo "${ secrets.ENV_VARIABLES }" > .env
+
+    - name: Build
+      run: cargo build --verbose
+    - name: Test
+      run: cargo test --verbose
       
