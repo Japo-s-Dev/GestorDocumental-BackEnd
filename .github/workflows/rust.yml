@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Load variables
-      run: 
+      run: |
         touch .env
         echo "${{ secrets.ENV_VARIABLES }}" > .env
 
