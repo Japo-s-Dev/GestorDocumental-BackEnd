@@ -19,7 +19,7 @@ jobs:
     - name: Load variables
       run: 
         touch .env
-        echo "${ secrets.ENV_VARIABLES }" > .env
+        echo "${{ secrets.ENV_VARIABLES }}" > .env
 
     - name: Build
       run: cargo build
