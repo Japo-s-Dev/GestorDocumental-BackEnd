@@ -39,7 +39,7 @@ jobs:
     - name: Test
       run: |
         source $HOME/.cargo/env
-        cargo test
+        cargo test --release
 
     - name: Publish
       run: |
