@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
 		.init();
 
 	// -- FOR DEV ONLY
-	_dev_utils::init_dev().await;
+	//_dev_utils::init_dev().await;
 
 	// Initialize ModelManager.
 	let mm = ModelManager::new().await?;
