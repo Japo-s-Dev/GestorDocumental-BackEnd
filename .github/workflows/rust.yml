@@ -34,10 +34,14 @@ jobs:
     - name: Build
       run: |
         source $HOME/.cargo/env
-        cargo build
+        cargo build --release
 
     - name: Test
       run: |
         source $HOME/.cargo/env
         cargo test
+
+    - name: Publish
+      run: |
+        sudo systemctl restart rust_backend.service
       
