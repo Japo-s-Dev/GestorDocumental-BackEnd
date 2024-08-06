@@ -1,1 +1,1 @@
-INSERT INTO "user" (username, correo) VALUES ('demo1', 'demo1@uvg.edu.gt');
+insert into "user" (username, correo) values ('demo1', 'demo1@uvg.edu.gt');
