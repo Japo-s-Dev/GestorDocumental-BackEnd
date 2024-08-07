@@ -22,10 +22,10 @@ jobs:
         port: ${{ secrets.PORT }}
         script: |
           # Synchronize files to the server
-          rsync -avz --delete ./ root@${{ secrets.HOST }}:/root/backend/
+          rsync -avz --delete ./ {{ secrets.USERNAME }}@${{ secrets.HOST }}:/{{ secrets.USERNAME }}/backend/
 
           # Install dependencies
-          sudo apt-get update && sudo apt-get install -y build-essential
+          apt-get update && apt-get install -y build-essential
 
           # Install Rust
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -38,4 +38,4 @@ jobs:
           cd /root/backend && source $HOME/.cargo/env && cargo test --release
 
           # Restart the service
-          sudo systemctl restart rust_backend.service
+          # sudo systemctl restart rust_backend.service
