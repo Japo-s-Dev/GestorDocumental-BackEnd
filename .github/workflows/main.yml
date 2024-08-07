@@ -23,7 +23,7 @@ jobs:
 
     - name: Copy files to the server
       run: |
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./ root@usvds6001x7.startdedicated.com:/root/
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./ root@usvds6001x7.startdedicated.com:/root/backend/
 
     - name: Install dependencies on server
       run: |
