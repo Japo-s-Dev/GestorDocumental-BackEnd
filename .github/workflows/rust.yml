@@ -1,4 +1,4 @@
-name: Rust
+name: Publish to prod Backend
 
 on:
   push:
@@ -10,8 +10,9 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  publish:
+    environment:
+      name: Production
     runs-on: self-hosted
 
     steps:
