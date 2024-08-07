@@ -19,7 +19,11 @@ jobs:
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.5.3
       with:
-        ssh-private-key: ${{ secrets.SSH_SECRET_KEY }}
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Test SSH connection
+      run: |
+        ssh -o StrictHostKeyChecking=no root@184.168.64.136 "echo 'SSH connection successful'"
 
     - name: Copy files to the server
       run: |
@@ -27,19 +31,16 @@ jobs:
 
     - name: Install dependencies on server
       run: |
-        ssh -o StrictHostKeyChecking=no root@usvds6001x7.startdedicated.com "sudo apt-get update && sudo apt-get install -y build-essential"
+        ssh -o StrictHostKeyChecking=no root@184.168.64.136 "sudo apt-get update && sudo apt-get install -y build-essential"
 
     - name: Install Rust on server
       run: |
-        ssh -o StrictHostKeyChecking=no root@usvds6001x7.startdedicated.com "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
-        ssh -o StrictHostKeyChecking=no root@usvds6001x7.startdedicated.com "source $HOME/.cargo/env"
+        ssh -o StrictHostKeyChecking=no root@184.168.64.136 "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source $HOME/.cargo/env"
 
     - name: Build project on server
       run: |
-        ssh -o StrictHostKeyChecking=no root@usvds6001x7.startdedicated.com "cd /path/to/your/app && source $HOME/.cargo/env && cargo build --release"
+        ssh -o StrictHostKeyChecking=no root@184.168.64.136 "cd /root/backend && source $HOME/.cargo/env && cargo build --release"
 
     - name: Test project on server
       run: |
-        ssh -o StrictHostKeyChecking=no root@usvds6001x7.startdedicated.com "cd /path/to/your/app && source $HOME/.cargo/env && cargo test --release"
-
-
+        ssh -o StrictHostKeyChecking=no root@184.168.64.136 "cd /root/backend && source $HOME/.cargo/env && cargo test --release"
