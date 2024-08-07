@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   deploy:
@@ -16,35 +13,28 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Set up SSH
+    - name: Set up SSH and deploy
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        script: whoami
+        script: |
+          # Synchronize files to the server
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./ root@${{ secrets.HOST }}:/root/backend/
 
-    - name: Test SSH connection
-      run: |
-        ssh -o StrictHostKeyChecking=no root@184.168.64.136 "echo 'SSH connection successful'"
+          # Install dependencies
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST }} "sudo apt-get update && sudo apt-get install -y build-essential"
 
-    - name: Copy files to the server
-      run: |
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./ root@184.168.64.136:/root/backend/
+          # Install Rust
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST }} "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source $HOME/.cargo/env"
 
-    - name: Install dependencies on server
-      run: |
-        ssh -o StrictHostKeyChecking=no root@184.168.64.136 "sudo apt-get update && sudo apt-get install -y build-essential"
+          # Build the project
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST }} "cd /root/backend && source $HOME/.cargo/env && cargo build --release"
 
-    - name: Install Rust on server
-      run: |
-        ssh -o StrictHostKeyChecking=no root@184.168.64.136 "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source $HOME/.cargo/env"
+          # Test the project
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST }} "cd /root/backend && source $HOME/.cargo/env && cargo test --release"
 
-    - name: Build project on server
-      run: |
-        ssh -o StrictHostKeyChecking=no root@184.168.64.136 "cd /root/backend && source $HOME/.cargo/env && cargo build --release"
-
-    - name: Test project on server
-      run: |
-        ssh -o StrictHostKeyChecking=no root@184.168.64.136 "cd /root/backend && source $HOME/.cargo/env && cargo test --release"
+          # Restart the service
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.HOST }} "sudo systemctl restart rust_backend.service"
