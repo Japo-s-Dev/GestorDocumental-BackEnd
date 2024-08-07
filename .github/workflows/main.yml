@@ -22,7 +22,7 @@ jobs:
         port: ${{ secrets.PORT }}
         script: |
           # Synchronize files to the server
-          rsync -avz --delete ./ {{ secrets.USERNAME }}@${{ secrets.HOST }}:/{{ secrets.USERNAME }}/backend/
+          rsync -avz --delete ./ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/${{ secrets.USERNAME }}/backend/
 
           # Install dependencies
           apt-get update && apt-get install -y build-essential
