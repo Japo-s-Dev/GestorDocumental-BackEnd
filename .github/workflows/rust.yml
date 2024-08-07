@@ -16,6 +16,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Load variables
       run: |
         touch .env
@@ -23,8 +24,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential
+        echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S apt-get update
+        echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S apt-get install -y build-essential
 
     - name: Install Rust
       run: |
@@ -43,5 +44,4 @@ jobs:
 
     - name: Publish
       run: |
-        sudo systemctl restart rust_backend.service
-      
+        echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl restart rust_backend.service
