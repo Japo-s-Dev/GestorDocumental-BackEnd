@@ -38,3 +38,4 @@ report.*.json
 *.jpg
 *.gif
 *.png
+.cargo/

@@ -1,14 +1,14 @@
 # Cargo config file
 
 # Environment variables
-[env]
+#[env]
 
 ## Secrets
 # Contraseñas para desarrollo en localhost
-
-#SERVICE_DB_URL = "postgres://app_user:dev_only_pwd@localhost/app_db"
-SERVICE_DB_URL = "postgres://postgres:postgres@gestor-db.cl2omc8828q8.us-east-1.rds.amazonaws.com:5432/postgres"
+#SERVICE_DB_URL = "postgres://postgres:postgres@gestor-db.cl2omc8828q8.us-east-1.rds.amazonaws.com:5432/postgres"
 #SERVICE_DB_URL = "postgres://postgres:root@db:5432/gestor_documental"
+
+SERVICE_DB_URL = "postgres://app_user:dev_password@db:5432/gestor_documental"
 
 SERVICE_PWD_KEY = "VjPT_xyBpjbXlA8Yb7Tdz9W_Pwv_iwyZXxwdqgouL6LiX3n1UakkB8to0QmLiqTjbd5mkCphI9qeYQnKETnZMw"
 
