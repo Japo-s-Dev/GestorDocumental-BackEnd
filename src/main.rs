@@ -14,17 +14,21 @@ mod web;
 pub mod _dev_utils;
 
 pub use self::error::{Error, Result};
-pub use config::config; // use crate::config
+pub use config::config;
+use tracing_subscriber::fmt::layer; // use crate::config
 
 use crate::model::ModelManager;
 use crate::web::mw_auth::{mw_ctx_require, mw_ctx_resolve};
 use crate::web::mw_res_map::mw_reponse_map;
 use crate::web::{routes_login, routes_static};
+use axum::http::header::CONTENT_TYPE;
+use axum::http::Method;
 use axum::response::Html;
 use axum::routing::get;
 use axum::{middleware, Router};
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
@@ -40,6 +44,12 @@ async fn main() -> Result<()> {
 	// -- FOR DEV ONLY
 	// _dev_utils::init_dev().await;
 
+	// Set up cors
+	let cors = CorsLayer::new()
+		.allow_methods([Method::GET, Method::POST, Method::PUT])
+		.allow_origin(Any)
+		.allow_headers([CONTENT_TYPE]);
+
 	// Initialize ModelManager.
 	let mm = ModelManager::new().await?;
 
@@ -49,7 +59,8 @@ async fn main() -> Result<()> {
 
 	let routes_hello = Router::new()
 		.route("/hello", get(|| async { Html("Hello World") }))
-		.route_layer(middleware::from_fn(mw_ctx_require));
+		.route_layer(middleware::from_fn(mw_ctx_require))
+		.layer(cors);
 
 	let routes_all = Router::new()
 		.merge(routes_login::routes(mm.clone()))
