@@ -19,7 +19,7 @@ jobs:
     - name: Load variables
       run: |
         touch .env
-        echo "${{ secrets.ENV_VARS }}" > .env
+        echo "${{ secrets.ENV_VARS }}" > ./.cargo/config.toml
 
     - name: Install dependencies
       run: |
