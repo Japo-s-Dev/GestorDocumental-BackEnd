@@ -26,6 +26,7 @@ use axum::http::Method;
 use axum::response::Html;
 use axum::routing::get;
 use axum::{middleware, Router};
+use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
 use tower_http::cors::{Any, CorsLayer};
@@ -36,6 +37,8 @@ use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+	dotenv().ok();
+
 	tracing_subscriber::fmt()
 		.with_target(false)
 		.with_env_filter(EnvFilter::from_default_env())
