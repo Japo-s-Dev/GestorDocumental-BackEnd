@@ -38,6 +38,7 @@ lazy-regex = "3"
 async-trait = "0.1"
 strum_macros = "0.25"
 anyhow = "1"
+dotenvy = "0.15"
 
 
 [dev-dependencies]
