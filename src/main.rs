@@ -21,7 +21,7 @@ use crate::model::ModelManager;
 use crate::web::mw_auth::{mw_ctx_require, mw_ctx_resolve};
 use crate::web::mw_res_map::mw_reponse_map;
 use crate::web::{routes_login, routes_static};
-use axum::http::header::CONTENT_TYPE;
+use axum::http::header::{ACCESS_CONTROL_ALLOW_ORIGIN, AUTHORIZATION, CONTENT_TYPE};
 use axum::http::Method;
 use axum::response::Html;
 use axum::routing::get;
@@ -51,8 +51,8 @@ async fn main() -> Result<()> {
 	let cors = CorsLayer::new()
 		.allow_methods([Method::GET, Method::POST, Method::PUT])
 		.allow_origin(Any)
-		.allow_headers([CONTENT_TYPE]);
-
+		.allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCESS_CONTROL_ALLOW_ORIGIN])
+		.allow_credentials(true);
 	// Initialize ModelManager.
 	let mm = ModelManager::new().await?;
 
