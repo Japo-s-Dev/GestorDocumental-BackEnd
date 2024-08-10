@@ -50,9 +50,7 @@ async fn main() -> Result<()> {
 	// Set up cors
 	let cors = CorsLayer::new()
 		.allow_methods([Method::GET, Method::POST, Method::PUT])
-		.allow_origin(Any)
-		.allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCESS_CONTROL_ALLOW_ORIGIN])
-		.allow_credentials(true);
+		.allow_origin(Any);
 	// Initialize ModelManager.
 	let mm = ModelManager::new().await?;
 
@@ -62,8 +60,7 @@ async fn main() -> Result<()> {
 
 	let routes_hello = Router::new()
 		.route("/hello", get(|| async { Html("Hello World") }))
-		.route_layer(middleware::from_fn(mw_ctx_require))
-		.layer(cors);
+		.route_layer(middleware::from_fn(mw_ctx_require));
 
 	let routes_all = Router::new()
 		.merge(routes_login::routes(mm.clone()))
@@ -72,6 +69,7 @@ async fn main() -> Result<()> {
 		.layer(middleware::map_response(mw_reponse_map))
 		.layer(middleware::from_fn_with_state(mm.clone(), mw_ctx_resolve))
 		.layer(CookieManagerLayer::new())
+		.layer(cors)
 		.fallback_service(routes_static::serve_dir());
 
 	// region:    --- Start Server
