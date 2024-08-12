@@ -4,6 +4,7 @@ use crate::model::base::{self, DbBmc};
 use crate::model::ModelManager;
 use crate::model::{Error, Result};
 use serde::{Deserialize, Serialize};
+use serde_json::{from_value, json};
 use sqlb::{Fields, HasFields};
 use sqlx::postgres::PgRow;
 use sqlx::FromRow;
@@ -13,24 +14,28 @@ use uuid::Uuid;
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct User {
 	pub id: i64,
+	pub email: String,
 	pub username: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Fields)]
 pub struct UserForCreate {
 	pub username: String,
 	pub pwd_clear: String,
+	pub email: String,
 }
 
 #[derive(Fields)]
 pub struct UserForInsert {
 	pub username: String,
+	pub email: String,
 }
 
 #[derive(Clone, FromRow, Fields, Debug)]
 pub struct UserForLogin {
 	pub id: i64,
 	pub username: String,
+	pub email: String,
 
 	// -- pwd and token info
 	pub pwd: Option<String>, // encrypted, #_scheme_id_#....
@@ -47,13 +52,19 @@ pub struct UserForAuth {
 	pub token_salt: Uuid,
 }
 
+#[derive(Deserialize, Clone, FromRow, Fields, Debug)]
+pub struct UserForUpdate {
+	pub username: String,
+	pub email: String,
+}
+
 /// Marker trait
 pub trait UserBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
 impl UserBy for User {}
 impl UserBy for UserForLogin {}
 impl UserBy for UserForAuth {}
-
+impl UserBy for UserForUpdate {}
 // endregion: --- User Types
 
 pub struct UserBmc;
@@ -111,6 +122,40 @@ impl UserBmc {
 			.await?;
 
 		Ok(())
+	}
+
+	pub async fn create(
+		ctx: &Ctx,
+		mm: &ModelManager,
+		user_c: UserForCreate,
+	) -> Result<i64> {
+		let data: UserForInsert = UserForInsert {
+			username: user_c.username,
+			email: user_c.email,
+		};
+
+		let user_id = base::create::<Self, _>(ctx, mm, data).await?;
+
+		Self::update_pwd(ctx, mm, user_id, &user_c.pwd_clear).await?;
+
+		Ok(user_id)
+	}
+
+	pub async fn list(ctx: &Ctx, mm: &ModelManager) -> Result<Vec<User>> {
+		base::list::<Self, _>(ctx, mm).await
+	}
+
+	pub async fn update(
+		ctx: &Ctx,
+		mm: &ModelManager,
+		id: i64,
+		user_u: UserForUpdate,
+	) -> Result<()> {
+		base::update::<Self, _>(ctx, mm, id, user_u).await
+	}
+
+	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
+		base::delete::<Self>(ctx, mm, id).await
 	}
 }
 
