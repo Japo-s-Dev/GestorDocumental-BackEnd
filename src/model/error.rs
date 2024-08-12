@@ -12,6 +12,8 @@ pub enum Error {
 	Crypt(crypt::Error),
 	Store(store::Error),
 
+	FailedToCreateUser { user_id: i64 },
+
 	// -- Externals
 	Sqlx(#[serde_as(as = "DisplayFromStr")] sqlx::Error),
 }

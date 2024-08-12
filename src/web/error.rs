@@ -9,6 +9,11 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, Serialize, strum_macros::AsRefStr)]
 #[serde(tag = "type", content = "data")]
 pub enum Error {
+	// -- Rpc
+	RpcMethodUnknown(String),
+	RpcMisingParams { rpc_method: String },
+	RpcFailJsonParams { rpc_method: String },
+
 	// -- Login
 	LoginFailUsernameNotFound,
 	LoginFailUserHasNoPwd { user_id: i64 },
@@ -17,8 +22,12 @@ pub enum Error {
 	// -- CtxExtError
 	CtxExt(web::mw_auth::CtxExtError),
 
+	// -- Modules
 	Model(model::Error),
 	Crypt(crypt::Error),
+
+	// -- External modules
+	SerdeJson(String),
 }
 
 impl From<model::Error> for Error {
@@ -30,6 +39,12 @@ impl From<model::Error> for Error {
 impl From<crypt::Error> for Error {
 	fn from(val: crypt::Error) -> Self {
 		Self::Crypt(val)
+	}
+}
+
+impl From<serde_json::Error> for Error {
+	fn from(val: serde_json::Error) -> Self {
+		Self::SerdeJson(val.to_string())
 	}
 }
 

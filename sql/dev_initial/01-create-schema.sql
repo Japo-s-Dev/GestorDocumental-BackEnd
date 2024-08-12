@@ -76,7 +76,7 @@ CREATE TABLE
     "user" (
         id BIGSERIAL PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
-        correo VARCHAR(50) UNIQUE NOT NULL,        
+        email VARCHAR(50) UNIQUE NOT NULL,        
         pwd VARCHAR(256),
         pwd_salt uuid NOT NULL DEFAULT gen_random_uuid(),
         token_salt uuid NOT NULL DEFAULT gen_random_uuid()
