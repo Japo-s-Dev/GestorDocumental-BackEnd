@@ -2,6 +2,7 @@
 
 mod base;
 mod error;
+pub mod role;
 mod store;
 pub mod user;
 

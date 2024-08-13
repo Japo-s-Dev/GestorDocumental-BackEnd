@@ -7,3 +7,7 @@ DROP USER IF EXISTS app_user;
 -- DEV ONLY - Dev only password (for local dev and unit test).
 CREATE USER app_user PASSWORD 'dev_password';
 CREATE DATABASE gestor_documental OWNER app_user ENCODING = 'UTF-8';
+
+
+-- CREATE USER app_user PASSWORD 'superSecretPasswordGestorDB';
+
