@@ -1,75 +1,75 @@
 -- Esquema base de app
 
 CREATE TABLE
-    TIPO_DATO (
-        tipoDatoId SERIAL PRIMARY KEY,
-        nombre VARCHAR(50) NOT NULL
+    datatype (
+        datatype_id SERIAL PRIMARY KEY,
+        name VARCHAR(50) NOT NULL
     );
 
 CREATE TABLE
-    PROYECTO (
-        proyectoId SERIAL PRIMARY KEY,
-        nombre VARCHAR(50) NOT NULL,
-        plantilla VARCHAR(50) NOT NULL
+    project (
+        project_id SERIAL PRIMARY KEY,
+        name VARCHAR(50) NOT NULL,
+        template VARCHAR(50) NOT NULL
     );
 
 CREATE TABLE
-    EXPEDIENTE (
-        expedienteId SERIAL PRIMARY KEY,
-        creacionFecha DATE NOT NULL,
-        modificacionFecha DATE,
-        usuarioCreador INT NOT NULL,
-        usuarioMod INT,
+    archive (
+        archive_id SERIAL PRIMARY KEY,
+        creation_date DATE NOT NULL,
+        modified_date DATE,
+        owner INT NOT NULL,
+        last_edit_user INT,
         tag VARCHAR(50)
     );
 
 CREATE TABLE 
-    SEPARADOR (
-        separadorId Serial PRIMARY KEY,
-        nombre VARCHAR(50) NOT NULL,
-        padreId INT NOT NULL,
-        expedienteId INT NOT NULL,
-        FOREIGN KEY (expedienteId) REFERENCES EXPEDIENTE(expedienteId) ON DELETE CASCADE,
-        FOREIGN KEY (padreId) REFERENCES SEPARADOR(separadorId) ON DELETE CASCADE
+    separator (
+        separator_id Serial PRIMARY KEY,
+        name VARCHAR(50) NOT NULL,
+        parent_id INT NOT NULL,
+        archive_id INT NOT NULL,
+        FOREIGN KEY (archive_id) REFERENCES archive(archive_id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_id) REFERENCES separator(separator_id) ON DELETE CASCADE
     );
 
 CREATE TABLE
-    DOCUMENTO (
-        documentoId SERIAL PRIMARY KEY,
-        padreId INT NOT NULL,
-        nombre VARCHAR(50) NOT NULL,
-        tipoDocumento VARCHAR(50) NOT NULL,
-        creacionFecha DATE NOT NULL,
-        modificacionFecha DATE,
-        usuarioCreador INT NOT NULL,
-        usuarioMod INT,
+    document (
+        document_id SERIAL PRIMARY KEY,
+        parent_id INT NOT NULL,
+        name VARCHAR(50) NOT NULL,
+        doctype VARCHAR(50) NOT NULL,
+        creation_date DATE NOT NULL,
+        modified_date DATE,
+        owner INT NOT NULL,
+        last_edit_user INT,
         url VARCHAR(50) NOT NULL,
-        FOREIGN KEY (padreId) REFERENCES SEPARADOR(separadorId) ON DELETE CASCADE
+        FOREIGN KEY (parent_id) REFERENCES separator(separator_id) ON DELETE CASCADE
     );
 
 CREATE TABLE
-    INDICE (
-        correlativo SERIAL NOT NULL,
-        proyectoId INT NOT NULL,
-        tipoDato INT NOT NULL,
-        requerido VARCHAR(50),
-        PRIMARY KEY (correlativo, proyectoId),
-        FOREIGN KEY (proyectoId) REFERENCES PROYECTO(proyectoId) ON DELETE CASCADE,
-        FOREIGN KEY (tipoDato) REFERENCES TIPO_DATO(tipoDatoId) ON DELETE CASCADE
+    index (
+        correlative SERIAL NOT NULL,
+        project_id INT NOT NULL,
+        datatype INT NOT NULL,
+        required VARCHAR(50),
+        PRIMARY KEY (correlative, project_id),
+        FOREIGN KEY (project_id) REFERENCES project(project_id) ON DELETE CASCADE,
+        FOREIGN KEY (datatype) REFERENCES datatype(datatype_id) ON DELETE CASCADE
     );
 
 CREATE TABLE
-    VALOR (
-        correlativo INT NOT NULL,
-        proyectoId INT NOT NULL,
-        expedienteId INT NOT NULL,
-        creacionFecha DATE NOT NULL,
-        modificacionFecha DATE,
-        usuarioMod INT,
-        valor VARCHAR(50) NOT NULL,
-        FOREIGN KEY (correlativo, proyectoId) REFERENCES INDICE(correlativo, proyectoId) ON DELETE CASCADE,
-        FOREIGN KEY (proyectoId) REFERENCES PROYECTO(proyectoId) ON DELETE CASCADE,
-        FOREIGN KEY (expedienteId) REFERENCES EXPEDIENTE(expedienteId) ON DELETE CASCADE
+    value (
+        correlative INT NOT NULL,
+        project_id INT NOT NULL,
+        archive_id INT NOT NULL,
+        creation_date DATE NOT NULL,
+        modified_date DATE,
+        last_edit_user INT,
+        value VARCHAR(50) NOT NULL,
+        FOREIGN KEY (correlative, project_id) REFERENCES index(correlative, project_id) ON DELETE CASCADE,
+        FOREIGN KEY (project_id) REFERENCES project(project_id) ON DELETE CASCADE,
+        FOREIGN KEY (archive_id) REFERENCES archive(archive_id) ON DELETE CASCADE
     );
 
 CREATE TABLE
@@ -83,49 +83,48 @@ CREATE TABLE
     );
 
 CREATE TABLE
-    ROL (
-        rolId SERIAL PRIMARY KEY,
-        nombre VARCHAR(50) UNIQUE NOT NULL,
-        descripcion VARCHAR(50)
+    role (
+        role_id SERIAL PRIMARY KEY,
+        name VARCHAR(50) UNIQUE NOT NULL,
+        description VARCHAR(50)
     );
 
 CREATE TABLE
-    PERMISO (
-        permisoId SERIAL PRIMARY KEY,
-        nombre VARCHAR(50) UNIQUE NOT NULL,
-        descripcion VARCHAR(50)
+    privilege (
+        privilege_id SERIAL PRIMARY KEY,
+        name VARCHAR(50) UNIQUE NOT NULL,
+        description VARCHAR(50)
     );
 
 CREATE TABLE
-    ROL_ASIGNADO (
-        userId INT NOT NULL,
-        rolId INT NOT NULL,
-        PRIMARY KEY (userId, rolId),
-        FOREIGN KEY (userId) REFERENCES "user" (id) ON DELETE CASCADE,
-        FOREIGN KEY (rolId) REFERENCES ROL (rolId) ON DELETE CASCADE
+    assigned_role (
+        user_id INT NOT NULL,
+        role_id INT NOT NULL,
+        PRIMARY KEY (user_id, role_id),
+        FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+        FOREIGN KEY (role_id) REFERENCES role (role_id) ON DELETE CASCADE
     );
 
 CREATE TABLE
-    PERMISO_ASOCIADO (
-        permisoId INT NOT NULL,
-        rolId INT NOT NULL,
-        PRIMARY KEY (permisoId, rolId),
-        FOREIGN KEY (permisoId) REFERENCES PERMISO (permisoId) ON DELETE CASCADE,
-        FOREIGN KEY (rolId) REFERENCES ROL (rolId) ON DELETE CASCADE
+    assosiated_privilege (
+        privilege_id INT NOT NULL,
+        role_id INT NOT NULL,
+        PRIMARY KEY (privilege_id, role_id),
+        FOREIGN KEY (privilege_id) REFERENCES privilege (privilege_id) ON DELETE CASCADE,
+        FOREIGN KEY (role_id) REFERENCES role (role_id) ON DELETE CASCADE
     );
 
 CREATE TABLE
-    LOG_SESION (idLog SERIAL PRIMARY KEY);
+    log_session (id_log SERIAL PRIMARY KEY);
 
 CREATE TABLE
-    DETALLE_LOG (
-        idLog INT NOT NULL,
-        userId INT NOT NULL,
-        fecha DATE NOT NULL,
-        hora TIME NOT NULL,
-        accion VARCHAR(50),
+    log_detail (
+        id_log INT NOT NULL,
+        user_id INT NOT NULL,
+        datetime DATETIME NOT NULL,
+        action VARCHAR(50),
         token VARCHAR(50),
-        PRIMARY KEY (idLog, userId),
-        FOREIGN KEY (idLog) REFERENCES LOG_SESION (idLog) ON DELETE CASCADE,
-        FOREIGN KEY (userId) REFERENCES "user"(id) ON DELETE CASCADE
+        PRIMARY KEY (id_log, user_id),
+        FOREIGN KEY (id_log) REFERENCES log_session (id_log) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
     );
