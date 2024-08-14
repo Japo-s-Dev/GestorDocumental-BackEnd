@@ -35,6 +35,7 @@ use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{any, get};
 use axum::{middleware, RequestPartsExt, Router, ServiceExt};
 use axum_client_ip::XRealIp;
+use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tower_cookies::CookieManagerLayer;
 use tower_http::cors::{AllowOrigin, Any, CorsLayer};
@@ -121,7 +122,7 @@ where
 	let mut res = next.run(req).await;
 
 	res.headers_mut().insert(
-		"access-control-allow-origin",
+		"Access-Control-Allow-Origin",
 		HeaderValue::from_str(&real_ip).unwrap_or(HeaderValue::from_static("*")),
 	);
 
