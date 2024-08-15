@@ -101,7 +101,7 @@ CREATE TABLE
         user_id INT NOT NULL,
         role_id INT NOT NULL,
         PRIMARY KEY (user_id, role_id),
-        FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE,
         FOREIGN KEY (role_id) REFERENCES role (role_id) ON DELETE CASCADE
     );
 
@@ -126,5 +126,5 @@ CREATE TABLE
         token VARCHAR(50),
         PRIMARY KEY (id_log, user_id),
         FOREIGN KEY (id_log) REFERENCES log_session (id_log) ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
     );
