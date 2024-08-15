@@ -18,6 +18,8 @@ jobs:
 
     - name: Load variables
       run: |
+        mkdir .cargo
+        touch .cargo/config.toml
         echo "${{ secrets.BUILD_DIR }}" > .cargo/config.toml
 
         echo "${{ secrets.ENV_VARS }}" > "${{ secrets.ENV_DIR }}"
