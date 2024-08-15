@@ -29,7 +29,7 @@ use axum::body::{boxed, Body, BoxBody};
 use axum::extract::{ConnectInfo, TypedHeader};
 use axum::headers::{HeaderMapExt, Origin};
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use axum::http::{HeaderValue, Method, Request, StatusCode};
+use axum::http::{HeaderName, HeaderValue, Method, Request, StatusCode};
 use axum::middleware::Next;
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{any, get};
@@ -52,17 +52,12 @@ async fn main() -> Result<()> {
 	// -- FOR DEV ONLY
 	// _dev_utils::init_dev().await;
 
-	let origins = vec![
-		"http://52.204.86.10".parse::<HeaderValue>().unwrap(),
-		"http://190.56.194.12:3400".parse::<HeaderValue>().unwrap(),
-	];
-
 	// Set up cors
 	let cors = CorsLayer::new()
-		//.allow_origin(origins)
+		//.allow_origin(Any)
+		.allow_credentials(true)
 		.allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-		.allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCEPT])
-		.allow_credentials(true);
+		.allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCEPT]);
 
 	// Initialize ModelManager.
 	let mm = ModelManager::new().await?;
