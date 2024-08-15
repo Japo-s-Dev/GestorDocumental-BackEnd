@@ -1,5 +1,5 @@
 // region:    --- Modules
-
+#![allow(unused)]
 mod config;
 mod crypt;
 mod ctx;
