@@ -8,6 +8,7 @@ pub mod routes_static;
 pub mod rpc;
 
 use crate::crypt::token::generate_web_token;
+use tower_cookies::cookie::SameSite;
 use tower_cookies::{Cookie, Cookies};
 
 pub use self::error::ClientError;
@@ -23,6 +24,8 @@ fn set_token_cookie(cookies: &Cookies, user: &str, salt: &str) -> Result<()> {
 	let mut cookie = Cookie::new(AUTH_TOKEN, token.to_string());
 	cookie.set_http_only(true);
 	cookie.set_path("/");
+	cookie.set_secure(true);
+	cookie.set_same_site(SameSite::None);
 
 	cookies.add(cookie);
 
