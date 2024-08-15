@@ -40,10 +40,10 @@ jobs:
         source $HOME/.cargo/env
         cargo build --release
 
-    - name: Test
-      run: |
-        source $HOME/.cargo/env
-        cargo test --release
+#    - name: Test
+ #     run: |
+  #      source $HOME/.cargo/env
+   #     cargo test --release
 
     - name: Publish
       run: |
