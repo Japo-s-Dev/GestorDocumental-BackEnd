@@ -51,7 +51,6 @@ async fn main() -> Result<()> {
 
 	// -- FOR DEV ONLY
 	// _dev_utils::init_dev().await;
-
 	let origins = [
 		"http://52.204.86.10".parse::<HeaderValue>().unwrap(),
 		"http://190.56.194.12:3400".parse::<HeaderValue>().unwrap(),
@@ -59,7 +58,7 @@ async fn main() -> Result<()> {
 
 	// Set up cors
 	let cors = CorsLayer::new()
-		//.allow_origin(origins)
+		.allow_origin(origins)
 		.allow_credentials(true)
 		.allow_methods([Method::GET, Method::POST, Method::OPTIONS])
 		.allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCEPT]);
@@ -83,7 +82,7 @@ async fn main() -> Result<()> {
 		//		.merge(routes_hello)
 		.nest("/api", routes_rpc)
 		.layer(middleware::map_response(mw_reponse_map))
-		.layer(middleware::from_fn(ip_extractor))
+		//.layer(middleware::from_fn(ip_extractor))
 		.layer(middleware::from_fn_with_state(mm.clone(), mw_ctx_resolve))
 		.layer(CookieManagerLayer::new())
 		.layer(cors)
