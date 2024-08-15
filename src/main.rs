@@ -52,10 +52,15 @@ async fn main() -> Result<()> {
 	// -- FOR DEV ONLY
 	// _dev_utils::init_dev().await;
 
+	let origins = [
+		"http://52.204.86.10".parse::<HeaderValue>().unwrap(),
+		"http://190.56.194.12:3400".parse::<HeaderValue>().unwrap(),
+	];
+
 	// Set up cors
 	let cors = CorsLayer::new()
-		//.allow_origin(Any)
-		.allow_credentials(true)
+		.allow_origin(origins)
+		//.allow_credentials(true)
 		.allow_methods([Method::GET, Method::POST, Method::OPTIONS])
 		.allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCEPT]);
 
@@ -111,14 +116,17 @@ where
 		.unwrap_or("*")
 		.to_string();
 
-	req.extensions_mut().insert(real_ip.clone());
+	let mut owned: String = "http://".to_owned();
+	owned.push_str(&real_ip);
+
+	req.extensions_mut().insert(owned.clone());
 
 	// Directly get the response, no need for map_err here
 	let mut res = next.run(req).await;
 
 	res.headers_mut().insert(
 		"Access-Control-Allow-Origin",
-		HeaderValue::from_str(&real_ip).unwrap_or(HeaderValue::from_static("*")),
+		HeaderValue::from_str(&owned).unwrap_or(HeaderValue::from_static("*")),
 	);
 
 	// Return the boxed response
