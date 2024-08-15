@@ -59,8 +59,8 @@ async fn main() -> Result<()> {
 
 	// Set up cors
 	let cors = CorsLayer::new()
-		.allow_origin(origins)
-		//.allow_credentials(true)
+		//.allow_origin(origins)
+		.allow_credentials(true)
 		.allow_methods([Method::GET, Method::POST, Method::OPTIONS])
 		.allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCEPT]);
 
