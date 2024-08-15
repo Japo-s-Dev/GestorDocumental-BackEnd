@@ -2,10 +2,6 @@ use crate::model;
 use axum::body::{boxed, BoxBody};
 use axum::http::{Response, StatusCode};
 use axum::response::IntoResponse;
-use axum::{
-	http::{HeaderValue, Request},
-	middleware::Next,
-};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
