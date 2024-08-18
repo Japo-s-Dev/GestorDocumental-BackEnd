@@ -52,3 +52,15 @@ pub async fn delete_user(
 
 	Ok(user)
 }
+
+pub async fn get_user(
+	ctx: Ctx,
+	mm: ModelManager,
+	params: ParamsIded,
+) -> Result<User> {
+	let ParamsIded { id } = params;
+
+	let user = UserBmc::get(&ctx, &mm, id).await?;
+
+	Ok(user)
+}

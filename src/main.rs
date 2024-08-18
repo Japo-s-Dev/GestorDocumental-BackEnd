@@ -13,6 +13,7 @@ pub mod _dev_utils;
 
 pub use self::error::{Error, Result};
 pub use config::config;
+use hyper::header::{COOKIE, SET_COOKIE};
 use tower_http::trace::TraceLayer;
 
 use crate::model::ModelManager;
@@ -44,6 +45,10 @@ async fn main() -> Result<()> {
 		"http://190.56.194.12:3400".parse::<HeaderValue>().unwrap(),
 		"http://localhost:3400".parse::<HeaderValue>().unwrap(),
 		"http://localhost:4200".parse::<HeaderValue>().unwrap(),
+		"https://52.204.86.10".parse::<HeaderValue>().unwrap(),
+		"https://190.56.194.12:3400".parse::<HeaderValue>().unwrap(),
+		"https://localhost:3400".parse::<HeaderValue>().unwrap(),
+		"https://localhost:4200".parse::<HeaderValue>().unwrap(),
 	];
 
 	// Set up cors
@@ -51,8 +56,7 @@ async fn main() -> Result<()> {
 		.allow_origin(origins)
 		.allow_credentials(true)
 		.allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-		.allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCEPT]);
-
+		.allow_headers([CONTENT_TYPE, AUTHORIZATION, ACCEPT, COOKIE, SET_COOKIE]);
 	// Initialize ModelManager.
 	let mm = ModelManager::new().await?;
 
