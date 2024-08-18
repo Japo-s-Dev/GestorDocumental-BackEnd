@@ -1,6 +1,7 @@
 // region:    --- Modules
 
 mod base;
+mod bucket;
 mod error;
 pub mod role;
 mod store;

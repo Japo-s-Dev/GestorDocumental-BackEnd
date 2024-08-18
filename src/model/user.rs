@@ -16,6 +16,7 @@ pub struct User {
 	pub id: i64,
 	pub email: String,
 	pub username: String,
+	pub assigned_role: i64,
 }
 
 #[derive(Deserialize, Fields)]
@@ -23,12 +24,14 @@ pub struct UserForCreate {
 	pub username: String,
 	pub pwd_clear: String,
 	pub email: String,
+	pub assigned_role: i64,
 }
 
 #[derive(Fields)]
 pub struct UserForInsert {
 	pub username: String,
 	pub email: String,
+	pub assigned_role: i64,
 }
 
 #[derive(Clone, FromRow, Fields, Debug)]
@@ -41,6 +44,7 @@ pub struct UserForLogin {
 	pub pwd: Option<String>, // encrypted, #_scheme_id_#....
 	pub pwd_salt: Uuid,
 	pub token_salt: Uuid,
+	pub assigned_role: i64,
 }
 
 #[derive(Clone, FromRow, Fields, Debug)]
@@ -56,6 +60,7 @@ pub struct UserForAuth {
 pub struct UserForUpdate {
 	pub username: String,
 	pub email: String,
+	pub assigned_role: i64,
 }
 
 /// Marker trait
@@ -132,6 +137,7 @@ impl UserBmc {
 		let data: UserForInsert = UserForInsert {
 			username: user_c.username,
 			email: user_c.email,
+			assigned_role: user_c.assigned_role,
 		};
 
 		let user_id = base::create::<Self, _>(ctx, mm, data).await?;

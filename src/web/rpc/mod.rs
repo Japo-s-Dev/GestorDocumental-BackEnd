@@ -1,3 +1,4 @@
+mod role_rpc;
 mod user_rpc;
 
 use crate::{
@@ -11,10 +12,11 @@ use axum::{
 	routing::post,
 	Json, Router,
 };
+use role_rpc::{create_role, delete_role, get_role, list_roles, update_role};
 use serde::Deserialize;
 use serde_json::{from_value, json, to_value, Value};
 use tracing::debug;
-use user_rpc::{create_user, delete_user, list_users, update_user};
+use user_rpc::{create_user, delete_user, get_user, list_users, update_user};
 
 #[derive(Deserialize)]
 struct RpcRequest {
@@ -102,10 +104,19 @@ async fn _rpc_handler(
 	debug!("{:<12} - _rpc_handler - method: {rpc_method}", "HANDLER");
 
 	let result_json: Value = match rpc_method.as_str() {
+		// Users CRUD
 		"create_user" => exec_rpc_fn!(create_user, ctx, mm, rpc_params),
 		"list_users" => exec_rpc_fn!(list_users, ctx, mm),
+		"get_user" => exec_rpc_fn!(get_user, ctx, mm, rpc_params),
 		"update_user" => exec_rpc_fn!(update_user, ctx, mm, rpc_params),
 		"delete_user" => exec_rpc_fn!(delete_user, ctx, mm, rpc_params),
+
+		// Roles CRUD
+		"create_role" => exec_rpc_fn!(create_role, ctx, mm, rpc_params),
+		"list_roles" => exec_rpc_fn!(list_roles, ctx, mm),
+		"get_role" => exec_rpc_fn!(get_role, ctx, mm, rpc_params),
+		"update_role" => exec_rpc_fn!(update_role, ctx, mm, rpc_params),
+		"delete_role" => exec_rpc_fn!(delete_role, ctx, mm, rpc_params),
 		// -- Fallback error
 		_ => return Err(Error::RpcMethodUnknown(rpc_method)),
 	};

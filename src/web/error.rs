@@ -18,6 +18,7 @@ pub enum Error {
 	LoginFailUsernameNotFound,
 	LoginFailUserHasNoPwd { user_id: i64 },
 	LoginFialPwdNotMatching { user_id: i64 },
+	LoginFailUserHasNoRole { user_id: i64 },
 
 	// -- CtxExtError
 	CtxExt(web::mw_auth::CtxExtError),
