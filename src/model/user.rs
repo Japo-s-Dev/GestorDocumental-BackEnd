@@ -16,7 +16,14 @@ pub struct User {
 	pub id: i64,
 	pub email: String,
 	pub username: String,
-	pub assigned_role: i64,
+	pub assigned_role: String,
+}
+
+pub struct UserWithRole {
+	pub id: i64,
+	pub email: String,
+	pub username: String,
+	pub role: String,
 }
 
 #[derive(Deserialize, Fields)]
@@ -24,14 +31,14 @@ pub struct UserForCreate {
 	pub username: String,
 	pub pwd_clear: String,
 	pub email: String,
-	pub assigned_role: i64,
+	pub assigned_role: String,
 }
 
 #[derive(Fields)]
 pub struct UserForInsert {
 	pub username: String,
 	pub email: String,
-	pub assigned_role: i64,
+	pub assigned_role: String,
 }
 
 #[derive(Clone, FromRow, Fields, Debug)]
@@ -44,7 +51,7 @@ pub struct UserForLogin {
 	pub pwd: Option<String>, // encrypted, #_scheme_id_#....
 	pub pwd_salt: Uuid,
 	pub token_salt: Uuid,
-	pub assigned_role: i64,
+	pub assigned_role: String,
 }
 
 #[derive(Clone, FromRow, Fields, Debug)]
@@ -60,7 +67,7 @@ pub struct UserForAuth {
 pub struct UserForUpdate {
 	pub username: String,
 	pub email: String,
-	pub assigned_role: i64,
+	pub assigned_role: String,
 }
 
 /// Marker trait

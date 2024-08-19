@@ -49,18 +49,17 @@ CREATE TABLE IF NOT EXISTS
 
 CREATE TABLE IF NOT EXISTS
     public.role (
-        id BIGSERIAL PRIMARY KEY,
-        role_name VARCHAR(50) UNIQUE NOT NULL,
+        role_name VARCHAR(50) PRIMARY KEY,
         description VARCHAR(50)
     );
 
 CREATE TABLE IF NOT EXISTS
     public.assosiated_privilege (
         privilege_id BIGINT NOT NULL,
-        role_id BIGINT NOT NULL,
-        PRIMARY KEY (privilege_id, role_id),
+        role_name VARCHAR(50) NOT NULL,
+        PRIMARY KEY (privilege_id, role_name),
         FOREIGN KEY (privilege_id) REFERENCES privilege (id),
-        FOREIGN KEY (role_id) REFERENCES role (id)
+        FOREIGN KEY (role_name) REFERENCES role (role_name)
     );
 
 
@@ -72,8 +71,8 @@ CREATE TABLE IF NOT EXISTS
         pwd VARCHAR(256),
         pwd_salt uuid NOT NULL DEFAULT gen_random_uuid(),
         token_salt uuid NOT NULL DEFAULT gen_random_uuid(),
-        assigned_role BIGINT,
-        FOREIGN KEY (assigned_role) REFERENCES role(id)
+        assigned_role VARCHAR(50),
+        FOREIGN KEY (assigned_role) REFERENCES role(role_name)
     );
 
 CREATE TABLE IF NOT EXISTS
@@ -146,19 +145,16 @@ CREATE TABLE IF NOT EXISTS
 CREATE TABLE IF NOT EXISTS
     public.project_privilege (
         project_id BIGINT,
-        role_id BIGINT,
+        role_name VARCHAR(50),
         FOREIGN KEY (project_id) REFERENCES project(id),
-        FOREIGN KEY (role_id) REFERENCES role(id)
+        FOREIGN KEY (role_name) REFERENCES role(role_name)
 );
 
 CREATE TABLE IF NOT EXISTS
     public.separator_privilege (
         separator_id BIGINT,
-        role_id BIGINT,
+        role_name VARCHAR(50),
         FOREIGN KEY (separator_id) REFERENCES separator(id),
-        FOREIGN KEY (role_id) REFERENCES role(id)
+        FOREIGN KEY (role_name) REFERENCES role(role_name)
 );
-
-
-
 

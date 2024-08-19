@@ -54,16 +54,12 @@ async fn api_login_handler(
 	// Set web token
 	web::set_token_cookie(&cookies, &user.username, &user.token_salt.to_string())?;
 
-	let role: Role = RoleBmc::get_by_id(&root_ctx, &mm, user.assigned_role)
-		.await?
-		.ok_or(Error::LoginFailUserHasNoRole { user_id })?;
-
 	// Create the success body.
 	let body = Json(json!({
 		"result": {
 			"success": true,
 			"username": user.username,
-			"role": role.role_name
+			"role": user.assigned_role
 		}
 	}));
 
