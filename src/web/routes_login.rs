@@ -1,5 +1,6 @@
 use crate::crypt::{pwd, EncryptContent};
 use crate::ctx::Ctx;
+use crate::model::role::{Role, RoleBmc};
 use crate::model::user::{UserBmc, UserForLogin};
 use crate::model::ModelManager;
 use crate::web::{self, remove_token_cookie, Error, Result};
@@ -57,7 +58,8 @@ async fn api_login_handler(
 	let body = Json(json!({
 		"result": {
 			"success": true,
-		  "username": user.username
+			"username": user.username,
+			"role": user.assigned_role
 		}
 	}));
 
