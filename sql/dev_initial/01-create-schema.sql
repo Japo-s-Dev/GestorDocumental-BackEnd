@@ -49,7 +49,8 @@ CREATE TABLE IF NOT EXISTS
 
 CREATE TABLE IF NOT EXISTS
     public.role (
-        role_name VARCHAR(50) PRIMARY KEY,
+        id BIGSERIAL PRIMARY KEY
+        role_name VARCHAR(50) UNIQUE NOT NULL,
         description VARCHAR(50)
     );
 

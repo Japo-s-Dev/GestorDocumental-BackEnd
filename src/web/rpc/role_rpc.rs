@@ -1,13 +1,12 @@
 use super::{ParamsForCreate, ParamsForUpdate, ParamsIded};
 use crate::ctx::{self, Ctx};
-use crate::model::role::{Role, RoleBmc, RoleForInsert};
+use crate::model::role::{Role, RoleBmc, RoleForOp};
 use crate::model::ModelManager;
 use crate::web::Result;
-
 pub async fn create_role(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsForCreate<RoleForInsert>,
+	params: ParamsForCreate<RoleForOp>,
 ) -> Result<Role> {
 	let ParamsForCreate { data } = params;
 
@@ -38,7 +37,7 @@ pub async fn get_role(
 pub async fn update_role(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsForUpdate<RoleForInsert>,
+	params: ParamsForUpdate<RoleForOp>,
 ) -> Result<Role> {
 	let ParamsForUpdate { id, data } = params;
 
