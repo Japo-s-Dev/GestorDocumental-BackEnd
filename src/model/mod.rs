@@ -1,5 +1,6 @@
 // region:    --- Modules
 
+pub mod assigned_role;
 mod base;
 mod bucket;
 mod error;
