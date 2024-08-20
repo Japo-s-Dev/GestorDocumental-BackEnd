@@ -13,8 +13,8 @@ pub struct Role {
 	pub description: String,
 }
 
-#[derive(Clone, Fields, FromRow, Deserialize, Debug)]
-pub struct RoleForInsert {
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct RoleForOp {
 	pub role_name: String,
 	pub description: String,
 }
@@ -22,7 +22,7 @@ pub struct RoleForInsert {
 pub trait RoleBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
 impl RoleBy for Role {}
-impl RoleBy for RoleForInsert {}
+//impl RoleBy for RoleForInsert {}
 
 pub struct RoleBmc;
 
@@ -31,36 +31,33 @@ impl DbBmc for RoleBmc {
 }
 
 impl RoleBmc {
-	pub async fn get<E>(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<E>
-	where
-		E: RoleBy,
-	{
+	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Role> {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 
-	pub async fn get_by_id<E>(
-		ctx: &Ctx,
+	pub async fn first_by_username<E>(
+		_ctx: &Ctx,
 		mm: &ModelManager,
-		id: i64,
+		role_name: &str,
 	) -> Result<Option<E>>
 	where
 		E: RoleBy,
 	{
 		let db = mm.db();
 
-		let role = sqlb::select()
+		let user = sqlb::select()
 			.table(Self::TABLE)
-			.and_where("id", "=", id)
+			.and_where("role_name", "=", role_name)
 			.fetch_optional::<_, E>(db)
 			.await?;
 
-		Ok(role)
+		Ok(user)
 	}
 
 	pub async fn create(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		role_c: RoleForInsert,
+		role_c: RoleForOp,
 	) -> Result<i64> {
 		let role_id = base::create::<Self, _>(ctx, mm, role_c).await?;
 
@@ -75,7 +72,7 @@ impl RoleBmc {
 		ctx: &Ctx,
 		mm: &ModelManager,
 		id: i64,
-		role_u: RoleForInsert,
+		role_u: RoleForOp,
 	) -> Result<()> {
 		base::update::<Self, _>(ctx, mm, id, role_u).await
 	}
