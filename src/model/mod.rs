@@ -1,9 +1,10 @@
 // region:    --- Modules
 
-pub mod assigned_role;
 mod base;
 mod bucket;
+pub mod datatype;
 mod error;
+pub mod project;
 pub mod role;
 mod store;
 pub mod user;

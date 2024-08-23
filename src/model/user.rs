@@ -19,13 +19,6 @@ pub struct User {
 	pub assigned_role: String,
 }
 
-pub struct UserWithRole {
-	pub id: i64,
-	pub email: String,
-	pub username: String,
-	pub role: String,
-}
-
 #[derive(Deserialize, Fields)]
 pub struct UserForCreate {
 	pub username: String,
