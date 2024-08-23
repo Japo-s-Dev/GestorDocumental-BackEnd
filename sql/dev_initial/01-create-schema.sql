@@ -25,8 +25,7 @@ CREATE TABLE IF NOT EXISTS
 CREATE TABLE IF NOT EXISTS
     public.project (
         id BIGSERIAL PRIMARY KEY,
-        name VARCHAR(50) NOT NULL,
-        template VARCHAR(50) NOT NULL
+        project_name VARCHAR(50) NOT NULL,
     );
 
 CREATE TABLE IF NOT EXISTS
@@ -101,6 +100,7 @@ CREATE TABLE IF NOT EXISTS
 
 CREATE TABLE IF NOT EXISTS
     public.value (
+        id BIGSERIAL PRIMARY KEY,
         index_id BIGINT NOT NULL,
         project_id BIGINT NOT NULL,
         archive_id BIGINT NOT NULL,
