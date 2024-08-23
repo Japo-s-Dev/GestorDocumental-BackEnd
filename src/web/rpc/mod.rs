@@ -1,3 +1,5 @@
+mod datatype_rpc;
+mod project_rpc;
 mod role_rpc;
 mod user_rpc;
 
@@ -12,11 +14,13 @@ use axum::{
 	routing::post,
 	Json, Router,
 };
-use role_rpc::{create_role, delete_role, get_role, list_roles, update_role};
+use datatype_rpc::*;
+use project_rpc::*;
+use role_rpc::*;
 use serde::Deserialize;
 use serde_json::{from_value, json, to_value, Value};
 use tracing::debug;
-use user_rpc::{create_user, delete_user, get_user, list_users, update_user};
+use user_rpc::*;
 
 #[derive(Deserialize)]
 struct RpcRequest {
@@ -117,6 +121,21 @@ async fn _rpc_handler(
 		"get_role" => exec_rpc_fn!(get_role, ctx, mm, rpc_params),
 		"update_role" => exec_rpc_fn!(update_role, ctx, mm, rpc_params),
 		"delete_role" => exec_rpc_fn!(delete_role, ctx, mm, rpc_params),
+
+		// Projects CRUD
+		"create_project" => exec_rpc_fn!(create_project, ctx, mm, rpc_params),
+		"list_projects" => exec_rpc_fn!(list_projects, ctx, mm),
+		"get_project" => exec_rpc_fn!(get_project, ctx, mm, rpc_params),
+		"update_project" => exec_rpc_fn!(update_project, ctx, mm, rpc_params),
+		"delete_project" => exec_rpc_fn!(delete_project, ctx, mm, rpc_params),
+
+		// Datatype CRUD
+		"create_datatype" => exec_rpc_fn!(create_datatype, ctx, mm, rpc_params),
+		"list_datatypes" => exec_rpc_fn!(list_datatypes, ctx, mm),
+		"get_datatype" => exec_rpc_fn!(get_datatype, ctx, mm, rpc_params),
+		"update_datatype" => exec_rpc_fn!(update_datatype, ctx, mm, rpc_params),
+		"delete_datatype" => exec_rpc_fn!(delete_datatype, ctx, mm, rpc_params),
+
 		// -- Fallback error
 		_ => return Err(Error::RpcMethodUnknown(rpc_method)),
 	};

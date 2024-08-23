@@ -7,31 +7,29 @@ use sqlb::{Fields, HasFields};
 use sqlx::postgres::PgRow;
 use sqlx::FromRow;
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
-pub struct Role {
+pub struct Datatype {
 	pub id: i64,
-	pub role_name: String,
-	pub description: String,
+	pub datatype_name: String,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
-pub struct RoleForOp {
-	pub role_name: String,
-	pub description: String,
+pub struct DatatypeForOp {
+	pub datatype_name: String,
 }
 
-pub trait RoleBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
+pub trait DatatypeBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
-impl RoleBy for Role {}
-//impl RoleBy for RoleForInsert {}
+impl DatatypeBy for Datatype {}
+impl DatatypeBy for DatatypeForOp {}
 
-pub struct RoleBmc;
+pub struct DatatypeBmc;
 
-impl DbBmc for RoleBmc {
-	const TABLE: &'static str = "role";
+impl DbBmc for DatatypeBmc {
+	const TABLE: &'static str = "datatype";
 }
 
-impl RoleBmc {
-	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Role> {
+impl DatatypeBmc {
+	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Datatype> {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 
@@ -41,7 +39,7 @@ impl RoleBmc {
 		role_name: &str,
 	) -> Result<Option<E>>
 	where
-		E: RoleBy,
+		E: DatatypeBy,
 	{
 		let db = mm.db();
 
@@ -57,14 +55,14 @@ impl RoleBmc {
 	pub async fn create(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		role_c: RoleForOp,
+		role_c: DatatypeForOp,
 	) -> Result<i64> {
 		let role_id = base::create::<Self, _>(ctx, mm, role_c).await?;
 
 		Ok(role_id)
 	}
 
-	pub async fn list(ctx: &Ctx, mm: &ModelManager) -> Result<Vec<Role>> {
+	pub async fn list(ctx: &Ctx, mm: &ModelManager) -> Result<Vec<Datatype>> {
 		base::list::<Self, _>(ctx, mm).await
 	}
 
@@ -72,7 +70,7 @@ impl RoleBmc {
 		ctx: &Ctx,
 		mm: &ModelManager,
 		id: i64,
-		role_u: RoleForOp,
+		role_u: DatatypeForOp,
 	) -> Result<()> {
 		base::update::<Self, _>(ctx, mm, id, role_u).await
 	}
