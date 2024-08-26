@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS
         name VARCHAR(50) NOT NULL
     );
 
-
 CREATE TABLE IF NOT EXISTS
     public.project (
         id BIGSERIAL PRIMARY KEY,
@@ -41,10 +40,10 @@ CREATE TABLE IF NOT EXISTS
         project_id BIGINT NOT NULL,
         datatype BIGINT NOT NULL,
         required VARCHAR(50),
+        index_name VARCHAR(50) NOT NULL,
         FOREIGN KEY (project_id) REFERENCES project(id),
         FOREIGN KEY (datatype) REFERENCES datatype(id)
     );
-
 
 CREATE TABLE IF NOT EXISTS
     public.role (
@@ -61,7 +60,6 @@ CREATE TABLE IF NOT EXISTS
         FOREIGN KEY (privilege_id) REFERENCES privilege (id),
         FOREIGN KEY (role_name) REFERENCES role (role_name)
     );
-
 
 CREATE TABLE IF NOT EXISTS
     public.user (
@@ -88,6 +86,31 @@ CREATE TABLE IF NOT EXISTS
     );
 
 CREATE TABLE IF NOT EXISTS
+    public.comment (
+        id BIGSERIAL PRIMARY KEY,
+        archive_id BIGINT NOT NULL,
+        date DATE NOT NULL,
+        time TIME NOT NULL,
+        text VARCHAR(250) NOT NULL,
+        user_id BIGINT NOT NULL,
+        FOREIGN KEY (archive_id) REFERENCES archive(id),
+        FOREIGN KEY (user_id) REFERENCES "user" (id)       
+    );
+
+CREATE TABLE IF NOT EXISTS
+    public.separator_privilege (
+        id BIGSERIAL PRIMARY KEY,
+        archive_id BIGINT NOT NULL,
+        date DATE NOT NULL,
+        time TIME NOT NULL,
+        user_id BIGINT NOT NULL,
+        description VARCHAR(250) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        FOREIGN KEY (archive_id) REFERENCES archive(id),
+        FOREIGN KEY (user_id) REFERENCES "user" (id)        
+    );
+
+CREATE TABLE IF NOT EXISTS
     public.separator (
         id BIGSERIAL PRIMARY KEY,
         name VARCHAR(50) NOT NULL,
@@ -96,7 +119,6 @@ CREATE TABLE IF NOT EXISTS
         FOREIGN KEY (archive_id) REFERENCES archive(id),
         FOREIGN KEY (parent_id) REFERENCES separator(id)
     );
-
 
 CREATE TABLE IF NOT EXISTS
     public.value (
@@ -110,9 +132,9 @@ CREATE TABLE IF NOT EXISTS
         value VARCHAR(50) NOT NULL,
         FOREIGN KEY (index_id) REFERENCES index(id),
         FOREIGN KEY (project_id) REFERENCES project(id),
-        FOREIGN KEY (archive_id) REFERENCES archive(id)
+        FOREIGN KEY (archive_id) REFERENCES archive(id),
+        FOREIGN KEY (last_edit_user) REFERENCES "user" (id)
     );
-
 
 CREATE TABLE IF NOT EXISTS
     public.document (
@@ -125,7 +147,9 @@ CREATE TABLE IF NOT EXISTS
         owner BIGINT NOT NULL,
         last_edit_user BIGINT,
         url VARCHAR(50) NOT NULL,
-        FOREIGN KEY (parent_id) REFERENCES separator(id)
+        FOREIGN KEY (parent_id) REFERENCES separator(id),
+        FOREIGN KEY (owner) REFERENCES "user" (id),
+        FOREIGN KEY (last_edit_user) REFERENCES "user" (id)
     );
 
 CREATE TABLE IF NOT EXISTS
@@ -158,4 +182,3 @@ CREATE TABLE IF NOT EXISTS
         FOREIGN KEY (separator_id) REFERENCES separator(id),
         FOREIGN KEY (role_name) REFERENCES role(role_name)
 );
-
