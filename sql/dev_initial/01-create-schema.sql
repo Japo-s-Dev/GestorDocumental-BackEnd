@@ -6,6 +6,8 @@ DROP TABLE IF EXISTS public.log_session;
 DROP TABLE IF EXISTS public.document;
 DROP TABLE IF EXISTS public.value;
 DROP TABLE IF EXISTS public.separator;
+DROP TABLE IF EXISTS public.event;
+DROP TABLE IF EXISTS public.comment;
 DROP TABLE IF EXISTS public.archive;
 DROP TABLE IF EXISTS public."user";
 DROP TABLE IF EXISTS public.assosiated_privilege;
@@ -76,7 +78,7 @@ CREATE TABLE IF NOT EXISTS
 CREATE TABLE IF NOT EXISTS
     public.archive (
         id BIGSERIAL PRIMARY KEY,
-        creation_date DATE NOT NULL,
+        creation_date DATE DEFAULT NOW(),
         modified_date DATE,
         owner BIGINT NOT NULL,
         last_edit_user BIGINT,
@@ -89,8 +91,7 @@ CREATE TABLE IF NOT EXISTS
     public.comment (
         id BIGSERIAL PRIMARY KEY,
         archive_id BIGINT NOT NULL,
-        date DATE NOT NULL,
-        time TIME NOT NULL,
+        datetime TIMESTAMP DEFAULT NOW(),
         text VARCHAR(250) NOT NULL,
         user_id BIGINT NOT NULL,
         FOREIGN KEY (archive_id) REFERENCES archive(id),
@@ -98,11 +99,10 @@ CREATE TABLE IF NOT EXISTS
     );
 
 CREATE TABLE IF NOT EXISTS
-    public.separator_privilege (
+    public.event (
         id BIGSERIAL PRIMARY KEY,
         archive_id BIGINT NOT NULL,
-        date DATE NOT NULL,
-        time TIME NOT NULL,
+        datetime TIMESTAMP DEFAULT NOW(),
         user_id BIGINT NOT NULL,
         description VARCHAR(250) NOT NULL,
         type VARCHAR(50) NOT NULL,
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS
         index_id BIGINT NOT NULL,
         project_id BIGINT NOT NULL,
         archive_id BIGINT NOT NULL,
-        creation_date DATE NOT NULL,
+        creation_date DATE DEFAULT NOW(),
         modified_date DATE,
         last_edit_user BIGINT,
         value VARCHAR(50) NOT NULL,
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS
         parent_id BIGINT NOT NULL,
         name VARCHAR(50) NOT NULL,
         doctype VARCHAR(50) NOT NULL,
-        creation_date DATE NOT NULL,
+        creation_date DATE DEFAULT NOW(),
         modified_date DATE,
         owner BIGINT NOT NULL,
         last_edit_user BIGINT,
@@ -159,7 +159,7 @@ CREATE TABLE IF NOT EXISTS
     public.log_detail (
         id_log BIGINT NOT NULL,
         user_id BIGINT NOT NULL,
-        datetime TIMESTAMP NOT NULL,
+        datetime TIMESTAMP DEFAULT NOW(),
         action VARCHAR(50),
         token VARCHAR(50),
         PRIMARY KEY (id_log, user_id),
