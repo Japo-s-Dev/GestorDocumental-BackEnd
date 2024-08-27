@@ -11,15 +11,15 @@ pub async fn create_project(
 	let ParamsForCreate { data } = params;
 
 	let id = ProjectBmc::create(&ctx, &mm, data).await?;
-	let role = ProjectBmc::get(&ctx, &mm, id).await?;
+	let project = ProjectBmc::get(&ctx, &mm, id).await?;
 
-	Ok(role)
+	Ok(project)
 }
 
 pub async fn list_projects(ctx: Ctx, mm: ModelManager) -> Result<Vec<Project>> {
-	let roles = ProjectBmc::list(&ctx, &mm).await?;
+	let projects = ProjectBmc::list(&ctx, &mm).await?;
 
-	Ok(roles)
+	Ok(projects)
 }
 
 pub async fn get_project(
@@ -29,9 +29,9 @@ pub async fn get_project(
 ) -> Result<Project> {
 	let ParamsIded { id } = params;
 
-	let role = ProjectBmc::get(&ctx, &mm, id).await?;
+	let project = ProjectBmc::get(&ctx, &mm, id).await?;
 
-	Ok(role)
+	Ok(project)
 }
 
 pub async fn update_project(
@@ -43,9 +43,9 @@ pub async fn update_project(
 
 	ProjectBmc::update(&ctx, &mm, id, data).await?;
 
-	let role = ProjectBmc::get(&ctx, &mm, id).await?;
+	let project = ProjectBmc::get(&ctx, &mm, id).await?;
 
-	Ok(role)
+	Ok(project)
 }
 
 pub async fn delete_project(
@@ -55,8 +55,8 @@ pub async fn delete_project(
 ) -> Result<Project> {
 	let ParamsIded { id } = params;
 
-	let role = ProjectBmc::get(&ctx, &mm, id).await?;
+	let project = ProjectBmc::get(&ctx, &mm, id).await?;
 	ProjectBmc::delete(&ctx, &mm, id).await?;
 
-	Ok(role)
+	Ok(project)
 }

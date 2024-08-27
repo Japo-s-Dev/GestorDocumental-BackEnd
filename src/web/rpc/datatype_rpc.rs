@@ -11,15 +11,15 @@ pub async fn create_datatype(
 	let ParamsForCreate { data } = params;
 
 	let id = DatatypeBmc::create(&ctx, &mm, data).await?;
-	let role = DatatypeBmc::get(&ctx, &mm, id).await?;
+	let datatype = DatatypeBmc::get(&ctx, &mm, id).await?;
 
-	Ok(role)
+	Ok(datatype)
 }
 
 pub async fn list_datatypes(ctx: Ctx, mm: ModelManager) -> Result<Vec<Datatype>> {
-	let roles = DatatypeBmc::list(&ctx, &mm).await?;
+	let datatypes = DatatypeBmc::list(&ctx, &mm).await?;
 
-	Ok(roles)
+	Ok(datatypes)
 }
 
 pub async fn get_datatype(
@@ -29,9 +29,9 @@ pub async fn get_datatype(
 ) -> Result<Datatype> {
 	let ParamsIded { id } = params;
 
-	let role = DatatypeBmc::get(&ctx, &mm, id).await?;
+	let datatypes = DatatypeBmc::get(&ctx, &mm, id).await?;
 
-	Ok(role)
+	Ok(datatypes)
 }
 
 pub async fn update_datatype(
@@ -43,9 +43,9 @@ pub async fn update_datatype(
 
 	DatatypeBmc::update(&ctx, &mm, id, data).await?;
 
-	let role = DatatypeBmc::get(&ctx, &mm, id).await?;
+	let datatype = DatatypeBmc::get(&ctx, &mm, id).await?;
 
-	Ok(role)
+	Ok(datatype)
 }
 
 pub async fn delete_datatype(
@@ -55,8 +55,8 @@ pub async fn delete_datatype(
 ) -> Result<Datatype> {
 	let ParamsIded { id } = params;
 
-	let role = DatatypeBmc::get(&ctx, &mm, id).await?;
+	let datatype = DatatypeBmc::get(&ctx, &mm, id).await?;
 	DatatypeBmc::delete(&ctx, &mm, id).await?;
 
-	Ok(role)
+	Ok(datatype)
 }

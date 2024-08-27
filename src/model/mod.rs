@@ -1,9 +1,11 @@
 // region:    --- Modules
 
+mod archive;
 mod base;
 mod bucket;
 pub mod datatype;
 mod error;
+pub mod index;
 pub mod project;
 pub mod role;
 mod store;

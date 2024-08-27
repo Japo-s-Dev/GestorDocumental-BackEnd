@@ -1,4 +1,5 @@
 mod datatype_rpc;
+mod index_rpc;
 mod project_rpc;
 mod role_rpc;
 mod user_rpc;
@@ -15,6 +16,7 @@ use axum::{
 	Json, Router,
 };
 use datatype_rpc::*;
+use index_rpc::*;
 use project_rpc::*;
 use role_rpc::*;
 use serde::Deserialize;
