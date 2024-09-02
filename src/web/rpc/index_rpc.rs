@@ -17,7 +17,7 @@ pub async fn create_index(
 	Ok(index)
 }
 
-pub async fn list_index(ctx: Ctx, mm: ModelManager) -> Result<Vec<Index>> {
+pub async fn list_indexes(ctx: Ctx, mm: ModelManager) -> Result<Vec<Index>> {
 	let indexes = IndexBmc::list(&ctx, &mm).await?;
 
 	Ok(indexes)

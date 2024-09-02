@@ -6,8 +6,9 @@ use serde::{Deserialize, Serialize};
 use sqlb::{Fields, HasFields};
 use sqlx::postgres::PgRow;
 use sqlx::FromRow;
+
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
-pub struct Index {
+pub struct Value {
 	pub id: i64,
 	pub datatype_name: String,
 	pub project_id: i64,
@@ -16,7 +17,7 @@ pub struct Index {
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
-pub struct IndexForCreate {
+pub struct ValueForCreate {
 	pub datatype_name: String,
 	pub project_id: i64,
 	pub required: bool,
@@ -24,40 +25,47 @@ pub struct IndexForCreate {
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
-pub struct IndexForUpdate {
+pub struct ValueForUpdate {
 	pub datatype_name: String,
 	pub required: bool,
 	pub index_name: String,
 }
 
-pub trait IndexBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
-
-impl IndexBy for Index {}
-impl IndexBy for IndexForCreate {}
-impl IndexBy for IndexForUpdate {}
-
-pub struct IndexBmc;
-
-impl DbBmc for IndexBmc {
-	const TABLE: &'static str = "index";
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct ValueForInsert {
+	pub datatype_name: String,
+	pub required: bool,
+	pub index_name: String,
 }
 
-impl IndexBmc {
-	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Index> {
+pub trait ValueBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
+
+impl ValueBy for Value {}
+impl ValueBy for ValueForCreate {}
+impl ValueBy for ValueForUpdate {}
+
+pub struct ValueBmc;
+
+impl DbBmc for ValueBmc {
+	const TABLE: &'static str = "value";
+}
+
+impl ValueBmc {
+	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Value> {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 
 	pub async fn create(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		index_c: IndexForCreate,
+		value_c: ValueForCreate,
 	) -> Result<i64> {
-		let index_id = base::create::<Self, _>(ctx, mm, index_c).await?;
+		let value_id = base::create::<Self, _>(ctx, mm, value_c).await?;
 
-		Ok(index_id)
+		Ok(value_id)
 	}
 
-	pub async fn list(ctx: &Ctx, mm: &ModelManager) -> Result<Vec<Index>> {
+	pub async fn list(ctx: &Ctx, mm: &ModelManager) -> Result<Vec<Value>> {
 		base::list::<Self, _>(ctx, mm).await
 	}
 
@@ -65,12 +73,13 @@ impl IndexBmc {
 		ctx: &Ctx,
 		mm: &ModelManager,
 		id: i64,
-		index_u: IndexForUpdate,
+		value_u: ValueForUpdate,
 	) -> Result<()> {
-		base::update::<Self, _>(ctx, mm, id, index_u).await
+		base::update::<Self, _>(ctx, mm, id, value_u).await
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
 		base::delete::<Self>(ctx, mm, id).await
 	}
 }
+

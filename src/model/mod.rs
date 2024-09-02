@@ -1,6 +1,6 @@
 // region:    --- Modules
 
-mod archive;
+pub mod archive;
 mod base;
 mod bucket;
 pub mod datatype;
@@ -10,6 +10,7 @@ pub mod project;
 pub mod role;
 mod store;
 pub mod user;
+pub mod value;
 
 pub use self::error::{Error, Result};
 use self::store::{new_db_pool, Db};

@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS
 
 CREATE TABLE IF NOT EXISTS
     public.assosiated_privilege (
-        privilege_id BIGINT NOT NULL,
+        id BIGINT NOT NULL,
         role_name VARCHAR(50) NOT NULL,
         PRIMARY KEY (privilege_id, role_name),
         FOREIGN KEY (privilege_id) REFERENCES privilege (id),
@@ -78,8 +78,8 @@ CREATE TABLE IF NOT EXISTS
 CREATE TABLE IF NOT EXISTS
     public.archive (
         id BIGSERIAL PRIMARY KEY,
-        creation_date DATE NOT NULL,
-        modified_date DATE,
+        creation_date TIMESTAMPTZ NOT NULL,
+        modified_date TIMESTAMPTZ,
         owner BIGINT NOT NULL,
         last_edit_user BIGINT,
         tag VARCHAR(50),
