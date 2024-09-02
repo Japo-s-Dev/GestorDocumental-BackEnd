@@ -1,63 +1,65 @@
 use super::{ParamsForCreate, ParamsForUpdate, ParamsIded};
 use crate::ctx::{self, Ctx};
-use crate::model::value::{Value, ValueBy, ValueForCreate, ValueForUpdate};
+use crate::model::value::{
+	Value, ValueBmc, ValueBy, ValueForCreate, ValueForUpdate,
+};
 use crate::model::ModelManager;
 use crate::web::Result;
 
 pub async fn create_value(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsForCreate<ArchiveForOp>,
-) -> Result<Archive> {
+	params: ParamsForCreate<ValueForCreate>,
+) -> Result<Value> {
 	let ParamsForCreate { data } = params;
 
-	let id = ArchiveBmc::create(&ctx, &mm, data).await?;
-	let archive = ArchiveBmc::get(&ctx, &mm, id).await?;
+	let id = ValueBmc::create(&ctx, &mm, data).await?;
+	let value = ValueBmc::get(&ctx, &mm, id).await?;
 
-	Ok(archive)
+	Ok(value)
 }
 
-pub async fn list_archives(ctx: Ctx, mm: ModelManager) -> Result<Vec<Archive>> {
-	let archives = ArchiveBmc::list(&ctx, &mm).await?;
+pub async fn list_values(ctx: Ctx, mm: ModelManager) -> Result<Vec<Value>> {
+	let values = ValueBmc::list(&ctx, &mm).await?;
 
-	Ok(archives)
+	Ok(values)
 }
 
-pub async fn get_archive(
+pub async fn get_value(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsIded,
-) -> Result<Archive> {
+) -> Result<Value> {
 	let ParamsIded { id } = params;
 
-	let archive = ArchiveBmc::get(&ctx, &mm, id).await?;
+	let value = ValueBmc::get(&ctx, &mm, id).await?;
 
-	Ok(archive)
+	Ok(value)
 }
 
-pub async fn update_archive(
+pub async fn update_value(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsForUpdate<ArchiveForOp>,
-) -> Result<Archive> {
+	params: ParamsForUpdate<ValueForUpdate>,
+) -> Result<Value> {
 	let ParamsForUpdate { id, data } = params;
 
-	ArchiveBmc::update(&ctx, &mm, id, data).await?;
+	ValueBmc::update(&ctx, &mm, id, data).await?;
 
-	let archive = ArchiveBmc::get(&ctx, &mm, id).await?;
+	let value = ValueBmc::get(&ctx, &mm, id).await?;
 
-	Ok(archive)
+	Ok(value)
 }
 
-pub async fn delete_archive(
+pub async fn delete_value(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsIded,
-) -> Result<Archive> {
+) -> Result<Value> {
 	let ParamsIded { id } = params;
 
-	let archive = ArchiveBmc::get(&ctx, &mm, id).await?;
-	ArchiveBmc::delete(&ctx, &mm, id).await?;
+	let value = ValueBmc::get(&ctx, &mm, id).await?;
+	ValueBmc::delete(&ctx, &mm, id).await?;
 
-	Ok(archive)
+	Ok(value)
 }
