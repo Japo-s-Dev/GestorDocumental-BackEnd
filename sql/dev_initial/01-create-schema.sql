@@ -6,6 +6,8 @@ DROP TABLE IF EXISTS public.log_session;
 DROP TABLE IF EXISTS public.document;
 DROP TABLE IF EXISTS public.value;
 DROP TABLE IF EXISTS public.separator;
+DROP TABLE IF EXISTS public.event;
+DROP TABLE IF EXISTS public.comment;
 DROP TABLE IF EXISTS public.archive;
 DROP TABLE IF EXISTS public."user";
 DROP TABLE IF EXISTS public.assosiated_privilege;
@@ -20,7 +22,6 @@ CREATE TABLE IF NOT EXISTS
         id BIGSERIAL PRIMARY KEY,
         name VARCHAR(50) NOT NULL
     );
-
 
 CREATE TABLE IF NOT EXISTS
     public.project (
@@ -41,10 +42,10 @@ CREATE TABLE IF NOT EXISTS
         project_id BIGINT NOT NULL,
         datatype BIGINT NOT NULL,
         required VARCHAR(50),
+        index_name VARCHAR(50) NOT NULL,
         FOREIGN KEY (project_id) REFERENCES project(id),
         FOREIGN KEY (datatype) REFERENCES datatype(id)
     );
-
 
 CREATE TABLE IF NOT EXISTS
     public.role (
@@ -62,7 +63,6 @@ CREATE TABLE IF NOT EXISTS
         FOREIGN KEY (role_name) REFERENCES role (role_name)
     );
 
-
 CREATE TABLE IF NOT EXISTS
     public.user (
         id BIGSERIAL PRIMARY KEY,
@@ -78,13 +78,36 @@ CREATE TABLE IF NOT EXISTS
 CREATE TABLE IF NOT EXISTS
     public.archive (
         id BIGSERIAL PRIMARY KEY,
-        creation_date TIMESTAMPTZ NOT NULL,
-        modified_date TIMESTAMPTZ,
+        creation_date DATE DEFAULT NOW(),
+        modified_date DATE,
         owner BIGINT NOT NULL,
         last_edit_user BIGINT,
         tag VARCHAR(50),
         FOREIGN KEY (owner) REFERENCES "user" (id),
         FOREIGN KEY (last_edit_user) REFERENCES "user" (id)
+    );
+
+CREATE TABLE IF NOT EXISTS
+    public.comment (
+        id BIGSERIAL PRIMARY KEY,
+        archive_id BIGINT NOT NULL,
+        datetime TIMESTAMP DEFAULT NOW(),
+        text VARCHAR(250) NOT NULL,
+        user_id BIGINT NOT NULL,
+        FOREIGN KEY (archive_id) REFERENCES archive(id),
+        FOREIGN KEY (user_id) REFERENCES "user" (id)       
+    );
+
+CREATE TABLE IF NOT EXISTS
+    public.event (
+        id BIGSERIAL PRIMARY KEY,
+        archive_id BIGINT NOT NULL,
+        datetime TIMESTAMP DEFAULT NOW(),
+        user_id BIGINT NOT NULL,
+        description VARCHAR(250) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        FOREIGN KEY (archive_id) REFERENCES archive(id),
+        FOREIGN KEY (user_id) REFERENCES "user" (id)        
     );
 
 CREATE TABLE IF NOT EXISTS
@@ -97,22 +120,21 @@ CREATE TABLE IF NOT EXISTS
         FOREIGN KEY (parent_id) REFERENCES separator(id)
     );
 
-
 CREATE TABLE IF NOT EXISTS
     public.value (
         id BIGSERIAL PRIMARY KEY,
         index_id BIGINT NOT NULL,
         project_id BIGINT NOT NULL,
         archive_id BIGINT NOT NULL,
-        creation_date DATE NOT NULL,
+        creation_date DATE DEFAULT NOW(),
         modified_date DATE,
         last_edit_user BIGINT,
         value VARCHAR(50) NOT NULL,
         FOREIGN KEY (index_id) REFERENCES index(id),
         FOREIGN KEY (project_id) REFERENCES project(id),
-        FOREIGN KEY (archive_id) REFERENCES archive(id)
+        FOREIGN KEY (archive_id) REFERENCES archive(id),
+        FOREIGN KEY (last_edit_user) REFERENCES "user" (id)
     );
-
 
 CREATE TABLE IF NOT EXISTS
     public.document (
@@ -120,12 +142,14 @@ CREATE TABLE IF NOT EXISTS
         archive_id BIGINT NOT NULL,
         name VARCHAR(50) NOT NULL,
         doc_type VARCHAR(50) NOT NULL,
-        creation_date DATE NOT NULL,
+        creation_date DATE DEFAULT NOW(),
         modified_date DATE,
         owner BIGINT NOT NULL,
         last_edit_user BIGINT,
         url VARCHAR(256) NOT NULL,
-        FOREIGN KEY (parent_id) REFERENCES separator(id)
+        FOREIGN KEY (parent_id) REFERENCES separator(id),
+        FOREIGN KEY (owner) REFERENCES "user" (id),
+        FOREIGN KEY (last_edit_user) REFERENCES "user" (id)
     );
 
 CREATE TABLE IF NOT EXISTS
@@ -135,7 +159,7 @@ CREATE TABLE IF NOT EXISTS
     public.log_detail (
         id_log BIGINT NOT NULL,
         user_id BIGINT NOT NULL,
-        datetime TIMESTAMP NOT NULL,
+        datetime TIMESTAMP DEFAULT NOW(),
         action VARCHAR(50),
         token VARCHAR(50),
         PRIMARY KEY (id_log, user_id),
@@ -158,4 +182,3 @@ CREATE TABLE IF NOT EXISTS
         FOREIGN KEY (separator_id) REFERENCES separator(id),
         FOREIGN KEY (role_name) REFERENCES role(role_name)
 );
-
