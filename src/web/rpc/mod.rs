@@ -1,8 +1,10 @@
 mod archive_rpc;
 mod datatype_rpc;
+mod document_rpc;
 mod index_rpc;
 mod project_rpc;
 mod role_rpc;
+mod separator_rpc;
 mod user_rpc;
 mod value_rpc;
 
@@ -19,13 +21,16 @@ use axum::{
 	Json, Router,
 };
 use datatype_rpc::*;
+use document_rpc::*;
 use index_rpc::*;
 use project_rpc::*;
 use role_rpc::*;
+use separator_rpc::*;
 use serde::Deserialize;
 use serde_json::{from_value, json, to_value, Value};
 use tracing::debug;
 use user_rpc::*;
+use value_rpc::*;
 
 #[derive(Deserialize)]
 struct RpcRequest {
@@ -156,11 +161,25 @@ async fn _rpc_handler(
 		"delete_archive" => exec_rpc_fn!(delete_archive, ctx, mm, rpc_params),
 
 		// Value CRUD
-		"create_value" => exec_rpc_fn!(create_archive, ctx, mm, rpc_params),
-		"list_values" => exec_rpc_fn!(list_archives, ctx, mm),
-		"get_value" => exec_rpc_fn!(get_archive, ctx, mm, rpc_params),
-		"update_value" => exec_rpc_fn!(update_archive, ctx, mm, rpc_params),
-		"delete_value" => exec_rpc_fn!(delete_archive, ctx, mm, rpc_params),
+		"create_value" => exec_rpc_fn!(create_value, ctx, mm, rpc_params),
+		"list_values" => exec_rpc_fn!(list_values, ctx, mm),
+		"get_value" => exec_rpc_fn!(get_value, ctx, mm, rpc_params),
+		"update_value" => exec_rpc_fn!(update_value, ctx, mm, rpc_params),
+		"delete_value" => exec_rpc_fn!(delete_value, ctx, mm, rpc_params),
+
+		// Separator CRUD
+		"create_separator" => exec_rpc_fn!(create_separator, ctx, mm, rpc_params),
+		"list_separators" => exec_rpc_fn!(list_separators, ctx, mm),
+		"get_separator" => exec_rpc_fn!(get_separator, ctx, mm, rpc_params),
+		"update_separator" => exec_rpc_fn!(update_separator, ctx, mm, rpc_params),
+		"delete_separator" => exec_rpc_fn!(delete_separator, ctx, mm, rpc_params),
+
+		// Document CRUD
+		"create_document" => exec_rpc_fn!(create_document, ctx, mm, rpc_params),
+		"list_documents" => exec_rpc_fn!(list_documents, ctx, mm),
+		"get_document" => exec_rpc_fn!(get_document, ctx, mm, rpc_params),
+		"update_document" => exec_rpc_fn!(update_document, ctx, mm, rpc_params),
+		"delete_document" => exec_rpc_fn!(delete_document, ctx, mm, rpc_params),
 
 		// -- Fallback error
 		_ => return Err(Error::RpcMethodUnknown(rpc_method)),

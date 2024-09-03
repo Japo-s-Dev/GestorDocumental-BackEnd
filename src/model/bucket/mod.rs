@@ -10,6 +10,8 @@ pub use self::error::{Error, Result};
 
 static S3_CLIENT: OnceCell<Client> = OnceCell::const_new();
 
+pub type Bucket = Client;
+
 async fn new_s3_client() -> Result<Client> {
 	let config = aws_config::load_defaults(BehaviorVersion::v2024_03_28()).await;
 
@@ -20,7 +22,7 @@ async fn new_s3_client() -> Result<Client> {
 	Ok(client)
 }
 
-pub async fn get_s3_client() -> Result<Client> {
+pub async fn get_s3_client() -> Result<Bucket> {
 	S3_CLIENT
 		.get_or_try_init(new_s3_client)
 		.await

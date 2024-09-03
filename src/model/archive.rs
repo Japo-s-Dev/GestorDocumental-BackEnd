@@ -10,25 +10,28 @@ use time::OffsetDateTime;
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Archive {
-    pub id: i64,
-    pub creation_date: OffsetDateTime,
-    pub modified_date: OffsetDateTime,
-    pub owner: i64,
-    pub last_edit_user: i64,
-    pub tag: String
+	pub id: i64,
+	pub project_id: i64,
+	pub creation_date: OffsetDateTime,
+	pub modified_date: OffsetDateTime,
+	pub owner: i64,
+	pub last_edit_user: i64,
+	pub tag: String,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct ArchiveForOp {
+	pub project_id: i64,
 	pub tag: String,
-    pub last_edit_user: i64
+	pub last_edit_user: i64,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct ArchiveForInsert {
-    pub modified_date: OffsetDateTime,
-    pub last_edit_user: i64,
-    pub tag: String
+	pub project_id: i64,
+	pub modified_date: OffsetDateTime,
+	pub last_edit_user: i64,
+	pub tag: String,
 }
 
 pub trait ArchiveBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
@@ -53,11 +56,12 @@ impl ArchiveBmc {
 		mm: &ModelManager,
 		archive_op: ArchiveForOp,
 	) -> Result<i64> {
-        let archive_insert = ArchiveForInsert {
-            modified_date: OffsetDateTime::now_utc(),
-            last_edit_user: archive_op.last_edit_user,
-            tag: archive_op.tag,
-        };
+		let archive_insert = ArchiveForInsert {
+			modified_date: OffsetDateTime::now_utc(),
+			project_id: archive_op.project_id,
+			last_edit_user: archive_op.last_edit_user,
+			tag: archive_op.tag,
+		};
 
 		let archive_id = base::create::<Self, _>(ctx, mm, archive_insert).await?;
 
@@ -74,11 +78,12 @@ impl ArchiveBmc {
 		id: i64,
 		archive_op: ArchiveForOp,
 	) -> Result<()> {
-         let archive_insert = ArchiveForInsert {
-            modified_date: OffsetDateTime::now_utc(),
-            last_edit_user: archive_op.last_edit_user,
-            tag: archive_op.tag,
-        };
+		let archive_insert = ArchiveForInsert {
+			modified_date: OffsetDateTime::now_utc(),
+			project_id: archive_op.project_id,
+			last_edit_user: archive_op.last_edit_user,
+			tag: archive_op.tag,
+		};
 
 		base::update::<Self, _>(ctx, mm, id, archive_insert).await
 	}
