@@ -117,14 +117,14 @@ CREATE TABLE IF NOT EXISTS
 CREATE TABLE IF NOT EXISTS
     public.document (
         id BIGSERIAL PRIMARY KEY,
-        parent_id BIGINT NOT NULL,
+        archive_id BIGINT NOT NULL,
         name VARCHAR(50) NOT NULL,
-        doctype VARCHAR(50) NOT NULL,
+        doc_type VARCHAR(50) NOT NULL,
         creation_date DATE NOT NULL,
         modified_date DATE,
         owner BIGINT NOT NULL,
         last_edit_user BIGINT,
-        url VARCHAR(50) NOT NULL,
+        url VARCHAR(256) NOT NULL,
         FOREIGN KEY (parent_id) REFERENCES separator(id)
     );
 

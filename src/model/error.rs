@@ -1,4 +1,4 @@
-use crate::{crypt, model::store};
+use crate::{crypt, model::bucket, model::store};
 use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
 
@@ -12,6 +12,7 @@ pub enum Error {
 	// -- Modules
 	Crypt(crypt::Error),
 	Store(store::Error),
+	Bucket(bucket::Error),
 
 	FailedToCreateUser { user_id: i64 },
 
@@ -35,6 +36,12 @@ impl From<store::Error> for Error {
 impl From<sqlx::Error> for Error {
 	fn from(val: sqlx::Error) -> Self {
 		Self::Sqlx(val)
+	}
+}
+
+impl From<bucket::Error> for Error {
+	fn from(val: bucket::Error) -> Self {
+		Self::Bucket(val)
 	}
 }
 
