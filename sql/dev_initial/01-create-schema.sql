@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS
 
 CREATE TABLE IF NOT EXISTS
     public.assosiated_privilege (
-        privilege_id BIGINT NOT NULL,
+        id BIGINT NOT NULL,
         role_name VARCHAR(50) NOT NULL,
         PRIMARY KEY (privilege_id, role_name),
         FOREIGN KEY (privilege_id) REFERENCES privilege (id),

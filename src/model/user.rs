@@ -10,7 +10,6 @@ use sqlx::postgres::PgRow;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-// region:    --- User Types
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct User {
 	pub id: i64,
@@ -164,32 +163,221 @@ impl UserBmc {
 		base::delete::<Self>(ctx, mm, id).await
 	}
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::{PgPool, Executor};
+    use uuid::Uuid;
+    use crate::ctx::Ctx;
+    use crate::model::ModelManager;
 
-// region:    --- Tests
-// #[cfg(test)]
-// mod tests {
-// 	use super::*;
-// 	use crate::_dev_utils;
-// 	use anyhow::{Context, Result};
-// 	use serial_test::serial;
-//
-// 	#[serial]
-// 	#[tokio::test]
-// 	async fn test_first_ok_demo1() -> Result<()> {
-// 		// -- Setup & Fixtures
-// 		let mm = _dev_utils::init_test().await;
-// 		let ctx = Ctx::root_ctx();
-// 		let fx_username = "demo1";
-//
-// 		// -- Exec
-// 		let user: User = UserBmc::first_by_username(&ctx, &mm, fx_username)
-// 			.await?
-// 			.context("Should have user 'demo1'")?;
-//
-// 		// -- Check
-// 		assert_eq!(user.username, fx_username);
-//
-// 		Ok(())
-// 	}
-// }
-// endregion: --- Tests
+    async fn setup_test_db() -> PgPool {
+        let pool = PgPool::connect("postgres://user:password@localhost/test_db").await.unwrap();
+
+        // Crear las tablas necesarias para la prueba
+        pool.execute("CREATE TABLE IF NOT EXISTS \"user\" (
+            id BIGSERIAL PRIMARY KEY,
+            username VARCHAR NOT NULL,
+            email VARCHAR NOT NULL,
+            pwd VARCHAR,
+            pwd_salt UUID NOT NULL,
+            token_salt UUID NOT NULL,
+            assigned_role VARCHAR NOT NULL
+        )").await.unwrap();
+
+        pool
+    }
+
+    fn setup_test_ctx() -> Ctx {
+        // Aquí asumo que estás configurando un user_id de prueba. Puedes ajustar esto según tus necesidades.
+        Ctx::new(1).expect("Failed to create test Ctx")
+    }
+
+    #[tokio::test]
+    async fn test_create_user() {
+        let pool = setup_test_db().await;
+        let ctx = setup_test_ctx();
+        let mm = ModelManager::new(pool.clone());
+
+        let user_c = UserForCreate {
+            username: "testuser".to_string(),
+            pwd_clear: "securepassword".to_string(),
+            email: "test@example.com".to_string(),
+            assigned_role: "user".to_string(),
+        };
+
+        let user_id = UserBmc::create(&ctx, &mm, user_c).await.unwrap();
+
+        let user = UserBmc::get::<User>(&ctx, &mm, user_id).await.unwrap();
+        assert_eq!(user.username, "testuser");
+        assert_eq!(user.email, "test@example.com");
+
+        pool.execute("DELETE FROM \"user\"").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_get_user_by_id() {
+        let pool = setup_test_db().await;
+        let ctx = setup_test_ctx();
+        let mm = ModelManager::new(pool.clone());
+
+        let user_c = UserForCreate {
+            username: "testuser".to_string(),
+            pwd_clear: "securepassword".to_string(),
+            email: "test@example.com".to_string(),
+            assigned_role: "user".to_string(),
+        };
+
+        let user_id = UserBmc::create(&ctx, &mm, user_c).await.unwrap();
+        let user = UserBmc::get::<User>(&ctx, &mm, user_id).await.unwrap();
+
+        assert_eq!(user.id, user_id);
+        assert_eq!(user.username, "testuser");
+
+        pool.execute("DELETE FROM \"user\"").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_get_user_by_username() {
+        let pool = setup_test_db().await;
+        let ctx = setup_test_ctx();
+        let mm = ModelManager::new(pool.clone());
+
+        let user_c = UserForCreate {
+            username: "testuser".to_string(),
+            pwd_clear: "securepassword".to_string(),
+            email: "test@example.com".to_string(),
+            assigned_role: "user".to_string(),
+        };
+
+        UserBmc::create(&ctx, &mm, user_c).await.unwrap();
+        let user = UserBmc::first_by_username::<User>(&ctx, &mm, "testuser").await.unwrap().unwrap();
+
+        assert_eq!(user.username, "testuser");
+
+        pool.execute("DELETE FROM \"user\"").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_update_password() {
+        let pool = setup_test_db().await;
+        let ctx = setup_test_ctx();
+        let mm = ModelManager::new(pool.clone());
+
+        let user_c = UserForCreate {
+            username: "testuser".to_string(),
+            pwd_clear: "securepassword".to_string(),
+            email: "test@example.com".to_string(),
+            assigned_role: "user".to_string(),
+        };
+
+        let user_id = UserBmc::create(&ctx, &mm, user_c).await.unwrap();
+        UserBmc::update_pwd(&ctx, &mm, user_id, "newpassword").await.unwrap();
+
+        let user = UserBmc::get::<UserForLogin>(&ctx, &mm, user_id).await.unwrap();
+
+        assert!(user.pwd.is_some());
+        assert_ne!(user.pwd.unwrap(), "securepassword");
+
+        pool.execute("DELETE FROM \"user\"").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_update_user_details() {
+        let pool = setup_test_db().await;
+        let ctx = setup_test_ctx();
+        let mm = ModelManager::new(pool.clone());
+
+        let user_c = UserForCreate {
+            username: "testuser".to_string(),
+            pwd_clear: "securepassword".to_string(),
+            email: "test@example.com".to_string(),
+            assigned_role: "user".to_string(),
+        };
+
+        let user_id = UserBmc::create(&ctx, &mm, user_c).await.unwrap();
+
+        let user_u = UserForUpdate {
+            username: "updateduser".to_string(),
+            email: "updated@example.com".to_string(),
+            assigned_role: "admin".to_string(),
+        };
+
+        UserBmc::update(&ctx, &mm, user_id, user_u).await.unwrap();
+
+        let updated_user = UserBmc::get::<User>(&ctx, &mm, user_id).await.unwrap();
+
+        assert_eq!(updated_user.username, "updateduser");
+        assert_eq!(updated_user.email, "updated@example.com");
+        assert_eq!(updated_user.assigned_role, "admin");
+
+        pool.execute("DELETE FROM \"user\"").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_list_users() {
+        let pool = setup_test_db().await;
+        let ctx = setup_test_ctx();
+        let mm = ModelManager::new(pool.clone());
+
+        let user_c1 = UserForCreate {
+            username: "user1".to_string(),
+            pwd_clear: "password1".to_string(),
+            email: "user1@example.com".to_string(),
+            assigned_role: "user".to_string(),
+        };
+
+        let user_c2 = UserForCreate {
+            username: "user2".to_string(),
+            pwd_clear: "password2".to_string(),
+            email: "user2@example.com".to_string(),
+            assigned_role: "user".to_string(),
+        };
+
+        UserBmc::create(&ctx, &mm, user_c1).await.unwrap();
+        UserBmc::create(&ctx, &mm, user_c2).await.unwrap();
+
+        let users = UserBmc::list(&ctx, &mm).await.unwrap();
+
+        assert_eq!(users.len(), 2);
+        assert_eq!(users[0].username, "user1");
+        assert_eq!(users[1].username, "user2");
+
+        pool.execute("DELETE FROM \"user\"").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_delete_user() {
+        let pool = setup_test_db().await;
+        let ctx = setup_test_ctx();
+        let mm = ModelManager::new(pool.clone());
+
+        let user_c = UserForCreate {
+            username: "testuser".to_string(),
+            pwd_clear: "securepassword".to_string(),
+            email: "test@example.com".to_string(),
+            assigned_role: "user".to_string(),
+        };
+
+        let user_id = UserBmc::create(&ctx, &mm, user_c).await.unwrap();
+        UserBmc::delete(&ctx, &mm, user_id).await.unwrap();
+
+        let user = UserBmc::get::<User>(&ctx, &mm, user_id).await;
+
+        assert!(user.is_err()); // Debe devolver un error porque el usuario ya no existe
+
+        pool.execute("DELETE FROM \"user\"").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_first_by_username_not_found() {
+        let pool = setup_test_db().await;
+        let ctx = setup_test_ctx();
+        let mm = ModelManager::new(pool.clone());
+
+        let user = UserBmc::first_by_username::<User>(&ctx, &mm, "nonexistentuser").await.unwrap();
+
+        assert!(user.is_none());
+    }
+}
+
