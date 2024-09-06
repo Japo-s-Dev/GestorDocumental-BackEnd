@@ -33,33 +33,14 @@ impl DatatypeBmc {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 
-	pub async fn first_by_role_name<E>(
-		_ctx: &Ctx,
-		mm: &ModelManager,
-		role_name: &str,
-	) -> Result<Option<E>>
-	where
-		E: DatatypeBy,
-	{
-		let db = mm.db();
-
-		let user = sqlb::select()
-			.table(Self::TABLE)
-			.and_where("role_name", "=", role_name)
-			.fetch_optional::<_, E>(db)
-			.await?;
-
-		Ok(user)
-	}
-
 	pub async fn create(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		role_c: DatatypeForOp,
+		datatype_c: DatatypeForOp,
 	) -> Result<i64> {
-		let role_id = base::create::<Self, _>(ctx, mm, role_c).await?;
+		let datatype_id = base::create::<Self, _>(ctx, mm, datatype_c).await?;
 
-		Ok(role_id)
+		Ok(datatype_id)
 	}
 
 	pub async fn list(ctx: &Ctx, mm: &ModelManager) -> Result<Vec<Datatype>> {
@@ -70,9 +51,9 @@ impl DatatypeBmc {
 		ctx: &Ctx,
 		mm: &ModelManager,
 		id: i64,
-		role_u: DatatypeForOp,
+		datatype_u: DatatypeForOp,
 	) -> Result<()> {
-		base::update::<Self, _>(ctx, mm, id, role_u).await
+		base::update::<Self, _>(ctx, mm, id, datatype_u).await
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {

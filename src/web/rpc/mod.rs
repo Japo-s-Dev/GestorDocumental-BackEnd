@@ -1,13 +1,19 @@
+mod archive_rpc;
 mod datatype_rpc;
+mod document_rpc;
+mod index_rpc;
 mod project_rpc;
 mod role_rpc;
+mod separator_rpc;
 mod user_rpc;
+mod value_rpc;
 
 use crate::{
 	ctx::{self, Ctx},
 	model::ModelManager,
 	web::{Error, Result},
 };
+use archive_rpc::*;
 use axum::{
 	extract::State,
 	response::{IntoResponse, Response},
@@ -15,12 +21,16 @@ use axum::{
 	Json, Router,
 };
 use datatype_rpc::*;
+use document_rpc::*;
+use index_rpc::*;
 use project_rpc::*;
 use role_rpc::*;
+use separator_rpc::*;
 use serde::Deserialize;
 use serde_json::{from_value, json, to_value, Value};
 use tracing::debug;
 use user_rpc::*;
+use value_rpc::*;
 
 #[derive(Deserialize)]
 struct RpcRequest {
@@ -108,21 +118,21 @@ async fn _rpc_handler(
 	debug!("{:<12} - _rpc_handler - method: {rpc_method}", "HANDLER");
 
 	let result_json: Value = match rpc_method.as_str() {
-		// Users CRUD
+		// User CRUD
 		"create_user" => exec_rpc_fn!(create_user, ctx, mm, rpc_params),
 		"list_users" => exec_rpc_fn!(list_users, ctx, mm),
 		"get_user" => exec_rpc_fn!(get_user, ctx, mm, rpc_params),
 		"update_user" => exec_rpc_fn!(update_user, ctx, mm, rpc_params),
 		"delete_user" => exec_rpc_fn!(delete_user, ctx, mm, rpc_params),
 
-		// Roles CRUD
+		// Role CRUD
 		"create_role" => exec_rpc_fn!(create_role, ctx, mm, rpc_params),
 		"list_roles" => exec_rpc_fn!(list_roles, ctx, mm),
 		"get_role" => exec_rpc_fn!(get_role, ctx, mm, rpc_params),
 		"update_role" => exec_rpc_fn!(update_role, ctx, mm, rpc_params),
 		"delete_role" => exec_rpc_fn!(delete_role, ctx, mm, rpc_params),
 
-		// Projects CRUD
+		// Project CRUD
 		"create_project" => exec_rpc_fn!(create_project, ctx, mm, rpc_params),
 		"list_projects" => exec_rpc_fn!(list_projects, ctx, mm),
 		"get_project" => exec_rpc_fn!(get_project, ctx, mm, rpc_params),
@@ -135,6 +145,41 @@ async fn _rpc_handler(
 		"get_datatype" => exec_rpc_fn!(get_datatype, ctx, mm, rpc_params),
 		"update_datatype" => exec_rpc_fn!(update_datatype, ctx, mm, rpc_params),
 		"delete_datatype" => exec_rpc_fn!(delete_datatype, ctx, mm, rpc_params),
+
+		// Index CRUD
+		"create_index" => exec_rpc_fn!(create_index, ctx, mm, rpc_params),
+		"list_indexes" => exec_rpc_fn!(list_indexes, ctx, mm),
+		"get_index" => exec_rpc_fn!(get_index, ctx, mm, rpc_params),
+		"update_index" => exec_rpc_fn!(update_index, ctx, mm, rpc_params),
+		"delete_index" => exec_rpc_fn!(delete_index, ctx, mm, rpc_params),
+
+		// Archive CRUD
+		"create_archive" => exec_rpc_fn!(create_archive, ctx, mm, rpc_params),
+		"list_archives" => exec_rpc_fn!(list_archives, ctx, mm),
+		"get_archive" => exec_rpc_fn!(get_archive, ctx, mm, rpc_params),
+		"update_archive" => exec_rpc_fn!(update_archive, ctx, mm, rpc_params),
+		"delete_archive" => exec_rpc_fn!(delete_archive, ctx, mm, rpc_params),
+
+		// Value CRUD
+		"create_value" => exec_rpc_fn!(create_value, ctx, mm, rpc_params),
+		"list_values" => exec_rpc_fn!(list_values, ctx, mm),
+		"get_value" => exec_rpc_fn!(get_value, ctx, mm, rpc_params),
+		"update_value" => exec_rpc_fn!(update_value, ctx, mm, rpc_params),
+		"delete_value" => exec_rpc_fn!(delete_value, ctx, mm, rpc_params),
+
+		// Separator CRUD
+		"create_separator" => exec_rpc_fn!(create_separator, ctx, mm, rpc_params),
+		"list_separators" => exec_rpc_fn!(list_separators, ctx, mm),
+		"get_separator" => exec_rpc_fn!(get_separator, ctx, mm, rpc_params),
+		"update_separator" => exec_rpc_fn!(update_separator, ctx, mm, rpc_params),
+		"delete_separator" => exec_rpc_fn!(delete_separator, ctx, mm, rpc_params),
+
+		// Document CRUD
+		"create_document" => exec_rpc_fn!(create_document, ctx, mm, rpc_params),
+		"list_documents" => exec_rpc_fn!(list_documents, ctx, mm),
+		"get_document" => exec_rpc_fn!(get_document, ctx, mm, rpc_params),
+		"update_document" => exec_rpc_fn!(update_document, ctx, mm, rpc_params),
+		"delete_document" => exec_rpc_fn!(delete_document, ctx, mm, rpc_params),
 
 		// -- Fallback error
 		_ => return Err(Error::RpcMethodUnknown(rpc_method)),

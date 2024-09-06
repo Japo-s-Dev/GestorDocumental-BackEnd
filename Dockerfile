@@ -10,6 +10,10 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 # Configura el entorno para que Rust esté disponible
 ENV PATH="/root/.cargo/bin:${PATH}"
 
+RUN apt-get install -y build-essential
+RUN yes | apt-get install libssl-dev pkg-config
+
+
 # Establece el directorio de trabajo
 WORKDIR /src/server
 

@@ -39,9 +39,9 @@ impl ProjectBmc {
 		mm: &ModelManager,
 		project_c: ProjectForOp,
 	) -> Result<i64> {
-		let role_id = base::create::<Self, _>(ctx, mm, project_c).await?;
+		let project_id = base::create::<Self, _>(ctx, mm, project_c).await?;
 
-		Ok(role_id)
+		Ok(project_id)
 	}
 
 	pub async fn list(ctx: &Ctx, mm: &ModelManager) -> Result<Vec<Project>> {
