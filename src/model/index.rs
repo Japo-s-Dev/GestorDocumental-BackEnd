@@ -9,7 +9,7 @@ use sqlx::FromRow;
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Index {
 	pub id: i64,
-	pub datatype_name: String,
+	pub datatype_id: i64,
 	pub project_id: i64,
 	pub required: bool,
 	pub index_name: String,
@@ -17,7 +17,7 @@ pub struct Index {
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct IndexForCreate {
-	pub datatype_name: String,
+	pub datatype_id: i64,
 	pub project_id: i64,
 	pub required: bool,
 	pub index_name: String,
@@ -25,7 +25,7 @@ pub struct IndexForCreate {
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct IndexForUpdate {
-	pub datatype_name: String,
+	pub datatype_id: i64,
 	pub required: bool,
 	pub index_name: String,
 }

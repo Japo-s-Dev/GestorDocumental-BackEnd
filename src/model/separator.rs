@@ -11,14 +11,14 @@ use sqlx::FromRow;
 pub struct Separator {
 	pub id: i64,
 	pub name: String,
-	pub parent_id: i64,
+	pub parent_id: Option<i64>,
 	pub archive_id: i64,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct SeparatorForCreate {
 	pub name: String,
-	pub parent_id: i64,
+	pub parent_id: Option<i64>,
 	pub archive_id: i64,
 }
 

@@ -1,13 +1,15 @@
 use super::{ParamsForCreate, ParamsForUpdate, ParamsIded};
 use crate::ctx::{self, Ctx};
-use crate::model::archive::{Archive, ArchiveBmc, ArchiveBy, ArchiveForOp};
+use crate::model::archive::{
+	Archive, ArchiveBmc, ArchiveBy, ArchiveForCreate, ArchiveForUpdate,
+};
 use crate::model::ModelManager;
 use crate::web::Result;
 
 pub async fn create_archive(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsForCreate<ArchiveForOp>,
+	params: ParamsForCreate<ArchiveForCreate>,
 ) -> Result<Archive> {
 	let ParamsForCreate { data } = params;
 
@@ -38,7 +40,7 @@ pub async fn get_archive(
 pub async fn update_archive(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsForUpdate<ArchiveForOp>,
+	params: ParamsForUpdate<ArchiveForUpdate>,
 ) -> Result<Archive> {
 	let ParamsForUpdate { id, data } = params;
 

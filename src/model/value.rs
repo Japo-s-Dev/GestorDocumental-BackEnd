@@ -6,36 +6,49 @@ use serde::{Deserialize, Serialize};
 use sqlb::{Fields, HasFields};
 use sqlx::postgres::PgRow;
 use sqlx::FromRow;
+use time::OffsetDateTime;
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Value {
 	pub id: i64,
-	pub datatype_name: String,
+	pub index_id: i64,
 	pub project_id: i64,
-	pub required: bool,
-	pub index_name: String,
+	pub archive_id: i64,
+	pub creation_date: OffsetDateTime,
+	pub modified_date: OffsetDateTime,
+	pub last_edit_user: i64,
+	pub value: String,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct ValueForCreate {
-	pub datatype_name: String,
+	pub index_id: i64,
 	pub project_id: i64,
-	pub required: bool,
-	pub index_name: String,
+	pub archive_id: i64,
+	pub value: String,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct ValueForUpdate {
-	pub datatype_name: String,
-	pub required: bool,
-	pub index_name: String,
+	pub value: String,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
-pub struct ValueForInsert {
-	pub datatype_name: String,
-	pub required: bool,
-	pub index_name: String,
+pub struct ValueForInsertCreate {
+	pub index_id: i64,
+	pub project_id: i64,
+	pub archive_id: i64,
+	pub value: String,
+	pub creation_date: OffsetDateTime,
+	pub modified_date: OffsetDateTime,
+	pub last_edit_user: i64,
+}
+
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct ValueForInsertUpdate {
+	pub value: String,
+	pub modified_date: OffsetDateTime,
+	pub last_edit_user: i64,
 }
 
 pub trait ValueBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
@@ -60,7 +73,17 @@ impl ValueBmc {
 		mm: &ModelManager,
 		value_c: ValueForCreate,
 	) -> Result<i64> {
-		let value_id = base::create::<Self, _>(ctx, mm, value_c).await?;
+		let values = ValueForInsertCreate {
+			index_id: value_c.index_id,
+			project_id: value_c.project_id,
+			archive_id: value_c.archive_id,
+			value: value_c.value,
+			creation_date: OffsetDateTime::now_utc(),
+			modified_date: OffsetDateTime::now_utc(),
+			last_edit_user: ctx.user_id(),
+		};
+
+		let value_id = base::create::<Self, _>(ctx, mm, values).await?;
 
 		Ok(value_id)
 	}
@@ -75,11 +98,16 @@ impl ValueBmc {
 		id: i64,
 		value_u: ValueForUpdate,
 	) -> Result<()> {
-		base::update::<Self, _>(ctx, mm, id, value_u).await
+		let values = ValueForInsertUpdate {
+			value: value_u.value,
+			modified_date: OffsetDateTime::now_utc(),
+			last_edit_user: ctx.user_id(),
+		};
+
+		base::update::<Self, _>(ctx, mm, id, values).await
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
 		base::delete::<Self>(ctx, mm, id).await
 	}
 }
-

@@ -20,15 +20,26 @@ pub struct Archive {
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
-pub struct ArchiveForOp {
+pub struct ArchiveForCreate {
 	pub project_id: i64,
 	pub tag: String,
-	pub last_edit_user: i64,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
-pub struct ArchiveForInsert {
+pub struct ArchiveForUpdate {
+	pub tag: String,
+}
+
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct ArchiveForInsertCreate {
 	pub project_id: i64,
+	pub owner: i64,
+	pub modified_date: OffsetDateTime,
+	pub last_edit_user: i64,
+	pub tag: String,
+}
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct ArchiveForInsertUpdate {
 	pub modified_date: OffsetDateTime,
 	pub last_edit_user: i64,
 	pub tag: String,
@@ -37,8 +48,10 @@ pub struct ArchiveForInsert {
 pub trait ArchiveBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
 impl ArchiveBy for Archive {}
-impl ArchiveBy for ArchiveForOp {}
-impl ArchiveBy for ArchiveForInsert {}
+impl ArchiveBy for ArchiveForCreate {}
+impl ArchiveBy for ArchiveForUpdate {}
+impl ArchiveBy for ArchiveForInsertCreate {}
+impl ArchiveBy for ArchiveForInsertUpdate {}
 
 pub struct ArchiveBmc;
 
@@ -54,12 +67,13 @@ impl ArchiveBmc {
 	pub async fn create(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		archive_op: ArchiveForOp,
+		archive_op: ArchiveForCreate,
 	) -> Result<i64> {
-		let archive_insert = ArchiveForInsert {
+		let archive_insert = ArchiveForInsertCreate {
 			modified_date: OffsetDateTime::now_utc(),
+			owner: ctx.user_id(),
 			project_id: archive_op.project_id,
-			last_edit_user: archive_op.last_edit_user,
+			last_edit_user: ctx.user_id(),
 			tag: archive_op.tag,
 		};
 
@@ -76,12 +90,11 @@ impl ArchiveBmc {
 		ctx: &Ctx,
 		mm: &ModelManager,
 		id: i64,
-		archive_op: ArchiveForOp,
+		archive_op: ArchiveForUpdate,
 	) -> Result<()> {
-		let archive_insert = ArchiveForInsert {
+		let archive_insert = ArchiveForInsertUpdate {
 			modified_date: OffsetDateTime::now_utc(),
-			project_id: archive_op.project_id,
-			last_edit_user: archive_op.last_edit_user,
+			last_edit_user: ctx.user_id(),
 			tag: archive_op.tag,
 		};
 
