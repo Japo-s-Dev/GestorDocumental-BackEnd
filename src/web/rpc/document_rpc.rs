@@ -1,10 +1,14 @@
 use super::{ParamsForCreate, ParamsForUpdate, ParamsIded};
 use crate::ctx::{self, Ctx};
 use crate::model::document::{
-	Document, DocumentBmc, DocumentForCreate, DocumentForUpdate,
+	self, Document, DocumentBmc, DocumentForCreate, DocumentForUpdate,
 };
 use crate::model::ModelManager;
+use crate::web::Error;
 use crate::web::Result;
+use axum::extract::{Multipart, State};
+use axum::response::IntoResponse;
+
 pub async fn create_document(
 	ctx: Ctx,
 	mm: ModelManager,
@@ -12,8 +16,10 @@ pub async fn create_document(
 ) -> Result<Document> {
 	let ParamsForCreate { data } = params;
 
-	let id = DocumentBmc::create(&ctx, &mm, data).await?;
-	let document = DocumentBmc::get(&ctx, &mm, id).await?;
+	// FIXME: Handle real URL
+
+	let document_id = DocumentBmc::create(&ctx, &mm, data).await?;
+	let document = DocumentBmc::get(&ctx, &mm, document_id).await?;
 
 	Ok(document)
 }
