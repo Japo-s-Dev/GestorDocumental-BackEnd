@@ -26,15 +26,14 @@ pub struct DocumentForCreate {
 	pub archive_id: i64,
 	pub name: String,
 	pub doc_type: String,
-	pub owner: i64,
-	pub last_edit_user: i64,
 	pub url: String,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Deserialize)]
 pub struct DocumentForUpdate {
 	pub name: String,
-	pub last_edit_user: i64,
+	pub doc_type: String,
+	pub url: String,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
@@ -84,8 +83,8 @@ impl DocumentBmc {
 			name: document_c.name,
 			doc_type: document_c.doc_type,
 			modified_date: OffsetDateTime::now_utc(),
-			owner: document_c.owner,
-			last_edit_user: document_c.last_edit_user,
+			owner: ctx.user_id(),
+			last_edit_user: ctx.user_id(),
 			url: document_c.url,
 		};
 
@@ -107,7 +106,7 @@ impl DocumentBmc {
 		let document = DocumentForUpdateInsert {
 			name: document_u.name,
 			modified_date: OffsetDateTime::now_utc(),
-			last_edit_user: document_u.last_edit_user,
+			last_edit_user: ctx.user_id(),
 		};
 
 		base::update::<Self, _>(ctx, mm, id, document).await

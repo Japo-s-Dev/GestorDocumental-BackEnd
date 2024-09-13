@@ -25,6 +25,9 @@ pub struct Config {
 
 	// -- WEB
 	pub WEB_FOLDER: String,
+
+	// -- S3
+	pub AWS_BUCKET_NAME: String,
 }
 
 impl Config {
@@ -39,6 +42,8 @@ impl Config {
 			DB_URL: get_env("SERVICE_DB_URL")?,
 
 			WEB_FOLDER: get_env("SERVICE_WEB_FOLDER")?,
+
+			AWS_BUCKET_NAME: get_env("AWS_BUCKET_NAME")?,
 		})
 	}
 }

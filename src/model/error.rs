@@ -1,6 +1,8 @@
-use crate::{crypt, model::bucket, model::store};
+use crate::{crypt, model::store};
 use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
+
+use super::bucket;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -12,10 +14,14 @@ pub enum Error {
 	// -- Modules
 	Crypt(crypt::Error),
 	Store(store::Error),
-	Bucket(bucket::Error),
 
 	FailedToCreateUser { user_id: i64 },
 
+	FailedToApplyChangeInBucket,
+
+	FailedToDecode,
+
+	Bucket(bucket::Error),
 	// -- Externals
 	Sqlx(#[serde_as(as = "DisplayFromStr")] sqlx::Error),
 }
