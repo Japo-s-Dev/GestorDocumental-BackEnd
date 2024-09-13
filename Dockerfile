@@ -23,5 +23,5 @@ WORKDIR /src/server
 RUN cargo install cargo-watch
 
 # Mantén el contenedor en ejecución
-CMD ["cargo", "watch", "-q","-c","-w","src/","-w",".cargo/","-x","run"]
+CMD ["cargo", "watch", "-q","-c","-w","crates/","-w",".cargo/","-x","run"]
 #CMD ["cargo", "run", "-q"]
