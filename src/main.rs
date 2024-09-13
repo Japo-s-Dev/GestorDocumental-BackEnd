@@ -12,6 +12,7 @@ mod web;
 pub mod _dev_utils;
 
 pub use self::error::{Error, Result};
+use aws_config::BehaviorVersion;
 pub use config::config;
 use hyper::header::{COOKIE, SET_COOKIE};
 use tower_http::trace::TraceLayer;

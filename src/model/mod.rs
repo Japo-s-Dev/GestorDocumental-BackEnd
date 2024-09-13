@@ -23,7 +23,7 @@ use self::store::{new_db_pool, Db};
 #[derive(Clone)]
 pub struct ModelManager {
 	db: Db,
-	bucket: Bucket,
+	pub bucket: Bucket,
 }
 
 impl ModelManager {

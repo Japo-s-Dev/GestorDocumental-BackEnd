@@ -13,6 +13,10 @@ pub enum Error {
 	RpcMethodUnknown(String),
 	RpcMisingParams { rpc_method: String },
 	RpcFailJsonParams { rpc_method: String },
+	InvalidParams(String),
+	RpcInvalidMethod { rpc_method: String, message: String },
+	// -- Document errors,
+	RequestMissingFiles,
 
 	// -- Login
 	LoginFailUsernameNotFound,
@@ -29,6 +33,14 @@ pub enum Error {
 
 	// -- External modules
 	SerdeJson(String),
+
+	// -- MultiPart
+	MultipartError,
+
+	S3Error,
+	SdkError(String),
+
+	BadRequest(String),
 }
 
 impl From<model::Error> for Error {
@@ -46,6 +58,28 @@ impl From<crypt::Error> for Error {
 impl From<serde_json::Error> for Error {
 	fn from(val: serde_json::Error) -> Self {
 		Self::SerdeJson(val.to_string())
+	}
+}
+
+impl From<axum::extract::multipart::MultipartError> for Error {
+	fn from(val: axum::extract::multipart::MultipartError) -> Self {
+		Self::MultipartError
+	}
+}
+
+impl From<aws_sdk_s3::Error> for Error {
+	fn from(val: aws_sdk_s3::Error) -> Self {
+		Self::S3Error
+	}
+}
+
+impl<R, E> From<aws_smithy_runtime_api::client::result::SdkError<R, E>> for Error
+where
+	E: std::fmt::Debug,
+	R: std::fmt::Debug,
+{
+	fn from(err: aws_smithy_runtime_api::client::result::SdkError<R, E>) -> Self {
+		Error::SdkError(format!("{:?}", err))
 	}
 }
 
