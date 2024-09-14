@@ -1,11 +1,11 @@
 use crate::ctx::Ctx;
-use crate::model::base::{self, DbBmc};
+use crate::model::base::{self, add_timestamps_for_update, DbBmc};
 use crate::model::ModelManager;
 use crate::model::Result;
 use lib_auth::pwd::{hash_pwd, ContentToHash};
-use modql::field::{Fields, HasFields};
+use modql::field::{Field, Fields, HasFields};
 use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsString};
-use sea_query::{Expr, Iden, PostgresQueryBuilder, Query, SimpleExpr};
+use sea_query::{Expr, Iden, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgRow;
@@ -119,11 +119,11 @@ impl UserBmc {
 			.and_where(Expr::col(UserIden::Username).eq(username));
 
 		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
-		let user = sqlx::query_as_with::<_, E, _>(&sql, values)
+		let entity = sqlx::query_as_with::<_, E, _>(&sql, values)
 			.fetch_optional(db)
 			.await?;
 
-		Ok(user)
+		Ok(entity)
 	}
 
 	pub async fn update_pwd(
@@ -140,10 +140,14 @@ impl UserBmc {
 			salt: user.pwd_salt,
 		})?;
 
+		let mut fields = Fields::new(vec![Field::new(UserIden::Pwd, pwd.into())]);
+		add_timestamps_for_update(&mut fields, ctx.user_id());
+
+		let fields = fields.for_sea_update();
 		let mut query = Query::update();
 		query
 			.table(Self::table_ref())
-			.value(UserIden::Pwd, SimpleExpr::from(pwd))
+			.values(fields)
 			.and_where(Expr::col(UserIden::Id).eq(id));
 
 		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
