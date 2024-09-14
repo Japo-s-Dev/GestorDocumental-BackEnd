@@ -43,7 +43,7 @@ pub enum Error {
 
 	// -- External Modules
 	#[from]
-	SerdeJson(#[serde_as(as = "DisplayFromStr")] Arc<serde_json::Error>),
+	SerdeJson(#[serde_as(as = "DisplayFromStr")] serde_json::Error),
 }
 
 // region:    --- Axum IntoResponse
@@ -82,7 +82,6 @@ impl Error {
 	pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
 		use web::Error::*;
 
-		#[allow(unreachable_patterns)]
 		match self {
 			// -- Login
 			LoginFailUsernameNotFound
