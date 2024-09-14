@@ -59,9 +59,9 @@ pub async fn mw_reponse_map(
 		uuid,
 		req_method,
 		uri,
-		rpc_info,
+		rpc_info.map(Arc::as_ref),
 		ctx,
-		web_error,
+		web_error.map(Arc::as_ref),
 		client_error,
 	)
 	.await;
