@@ -21,20 +21,25 @@ jobs:
         mkdir .cargo
         touch .cargo/config.toml
         echo "${{ secrets.BUILD_DIR }}" > .cargo/config.toml
+
         echo "${{ secrets.ENV_VARS }}" > "${{ secrets.ENV_DIR }}"
+
     - name: Install dependencies
       run: |
         echo "${{ secrets.SUDO_PASS }}" | sudo -S apt-get update
         echo "${{ secrets.SUDO_PASS }}" | sudo -S apt-get install -y build-essential
         echo "${{ secrets.SUDO_PASS }}" | sudo -S apt-get install libssl-dev pkg-config
+
     - name: Install Rust
       run: |
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source $HOME/.cargo/env
+
     - name: Build
       run: |
         source $HOME/.cargo/env
-        cargo build -p --release
+        cargo build -p web-server --release
+
 #    - name: Test
  #     run: |
   #      source $HOME/.cargo/env
