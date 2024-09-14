@@ -1,11 +1,10 @@
+use crate::params::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
 use crate::Result;
 use lib_core::ctx::Ctx;
 use lib_core::model::user::{
 	User, UserBmc, UserFilter, UserForCreate, UserForUpdate,
 };
 use lib_core::model::ModelManager;
-
-use super::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
 
 pub async fn create_user(
 	ctx: Ctx,

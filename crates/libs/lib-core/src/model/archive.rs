@@ -1,20 +1,28 @@
 use crate::ctx::Ctx;
 use crate::model::base::{self, DbBmc};
+use crate::model::modql_utils::time_to_sea_value;
 use crate::model::ModelManager;
 use crate::model::Result;
+use lib_utils::time::Rfc3339;
 use modql::field::{Fields, HasFields};
-use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsString};
+use modql::filter::{
+	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
+};
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use sqlx::postgres::PgRow;
+use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
-use time::OffsetDateTime;
 
+#[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Archive {
 	pub id: i64,
 	pub project_id: i64,
-	pub creation_date: i64,
-	pub modified_date: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub creation_date: OffsetDateTime,
+	#[serde_as(as = "Rfc3339")]
+	pub modified_date: OffsetDateTime,
 	pub owner: i64,
 	pub last_edit_user: i64,
 	pub tag: String,
@@ -31,17 +39,22 @@ pub struct ArchiveForUpdate {
 	pub tag: String,
 }
 
+#[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct ArchiveForInsertCreate {
 	pub project_id: i64,
 	pub owner: i64,
-	pub modified_date: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub modified_date: OffsetDateTime,
 	pub last_edit_user: i64,
 	pub tag: String,
 }
+
+#[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct ArchiveForInsertUpdate {
-	pub modified_date: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub modified_date: OffsetDateTime,
 	pub last_edit_user: i64,
 	pub tag: String,
 }
@@ -51,8 +64,10 @@ pub struct ArchiveFilter {
 	id: Option<OpValsInt64>,
 
 	project_id: Option<OpValsInt64>,
-	creation_date: Option<OpValsInt64>,
-	modified_date: Option<OpValsInt64>,
+	#[modql(to_sea_value_fn = "time_to_sea_value")]
+	creation_date: Option<OpValsValue>,
+	#[modql(to_sea_value_fn = "time_to_sea_value")]
+	modified_date: Option<OpValsValue>,
 	owner: Option<OpValsInt64>,
 	last_edit_user: Option<OpValsInt64>,
 	tag: Option<OpValsString>,
@@ -83,7 +98,7 @@ impl ArchiveBmc {
 		archive_op: ArchiveForCreate,
 	) -> Result<i64> {
 		let archive_insert = ArchiveForInsertCreate {
-			modified_date: OffsetDateTime::unix_timestamp(OffsetDateTime::now_utc()),
+			modified_date: OffsetDateTime::now_utc(),
 			owner: ctx.user_id(),
 			project_id: archive_op.project_id,
 			last_edit_user: ctx.user_id(),
@@ -111,7 +126,7 @@ impl ArchiveBmc {
 		archive_op: ArchiveForUpdate,
 	) -> Result<()> {
 		let archive_insert = ArchiveForInsertUpdate {
-			modified_date: OffsetDateTime::unix_timestamp(OffsetDateTime::now_utc()),
+			modified_date: OffsetDateTime::now_utc(),
 			last_edit_user: ctx.user_id(),
 			tag: archive_op.tag,
 		};

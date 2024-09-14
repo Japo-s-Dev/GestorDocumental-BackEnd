@@ -10,7 +10,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
 	// -- Rpc
 	RpcMethodUnknown(String),
-	RpcMisingParams {
+	RpcMissingParams {
 		rpc_method: String,
 	},
 	RpcFailJsonParams {
@@ -24,6 +24,8 @@ pub enum Error {
 	// -- Document errors,
 	RequestMissingFiles,
 
+	InvalidFile,
+	FileMissing,
 	// -- Modules
 	#[from]
 	Model(model::Error),

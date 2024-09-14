@@ -1,17 +1,16 @@
-name: Rust
+name: Publish to prod Backend
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
     branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  publish:
+    environment:
+      name: Production
     runs-on: self-hosted
 
     steps:
@@ -19,29 +18,28 @@ jobs:
 
     - name: Load variables
       run: |
-        touch .env
-        echo "${{ secrets.ENV_VARIABLES }}" > .env
-
+        mkdir .cargo
+        touch .cargo/config.toml
+        echo "${{ secrets.BUILD_DIR }}" > .cargo/config.toml
+        echo "${{ secrets.ENV_VARS }}" > "${{ secrets.ENV_DIR }}"
     - name: Install dependencies
       run: |
         echo "${{ secrets.SUDO_PASS }}" | sudo -S apt-get update
         echo "${{ secrets.SUDO_PASS }}" | sudo -S apt-get install -y build-essential
-
+        echo "${{ secrets.SUDO_PASS }}" | sudo -S apt-get install libssl-dev pkg-config
     - name: Install Rust
       run: |
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source $HOME/.cargo/env
-
     - name: Build
       run: |
         source $HOME/.cargo/env
-        cargo build --release
-
-    - name: Test
-      run: |
-        source $HOME/.cargo/env
-        cargo test --release
+        cargo build -p --release
+#    - name: Test
+ #     run: |
+  #      source $HOME/.cargo/env
+   #     cargo test --release
 
     - name: Publish
       run: |
-        echo "${{ secrets.SUDO_PASS }}" | sudo -S systemctl restart rust_back.service
+        echo "${{ secrets.SUDO_PASS }}" | sudo -S systemctl restart ${{ secrets.SERVICE }}

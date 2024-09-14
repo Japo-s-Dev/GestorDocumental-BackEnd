@@ -7,6 +7,7 @@ pub mod datatype;
 pub mod document;
 mod error;
 pub mod index;
+pub mod modql_utils;
 pub mod project;
 pub mod role;
 pub mod separator;

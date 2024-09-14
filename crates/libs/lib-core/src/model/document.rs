@@ -1,25 +1,38 @@
 use crate::ctx::Ctx;
 use crate::model::base::{self, DbBmc};
+use crate::model::modql_utils::time_to_sea_value;
 use crate::model::ModelManager;
 use crate::model::Result;
+use lib_utils::time::Rfc3339;
 use modql::field::{Fields, HasFields};
-use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsString};
+use modql::filter::{
+	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
+};
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use sqlx::postgres::PgRow;
+use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
-use time::OffsetDateTime;
 
+#[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Document {
 	pub id: i64,
 	pub archive_id: i64,
 	pub name: String,
 	pub doc_type: String,
-	pub creation_date: i64,
-	pub modified_date: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub creation_date: OffsetDateTime,
+	#[serde_as(as = "Rfc3339")]
+	pub modified_date: OffsetDateTime,
 	pub owner: i64,
 	pub last_edit_user: i64,
 	pub url: String,
+}
+
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct DocumentForRequest {
+	pub archive_id: i64,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
@@ -32,26 +45,31 @@ pub struct DocumentForCreate {
 
 #[derive(Clone, Fields, FromRow, Debug, Deserialize)]
 pub struct DocumentForUpdate {
+	pub archive_id: i64,
 	pub name: String,
 	pub doc_type: String,
 	pub url: String,
 }
 
+#[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct DocumentForCreateInsert {
 	pub archive_id: i64,
 	pub name: String,
 	pub doc_type: String,
-	pub modified_date: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub modified_date: OffsetDateTime,
 	pub owner: i64,
 	pub last_edit_user: i64,
 	pub url: String,
 }
 
+#[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct DocumentForUpdateInsert {
 	pub name: String,
-	pub modified_date: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub modified_date: OffsetDateTime,
 	pub last_edit_user: i64,
 }
 
@@ -69,8 +87,10 @@ pub struct DocumentFilter {
 	archive_id: Option<OpValsInt64>,
 	name: Option<OpValsString>,
 	doc_type: Option<OpValsString>,
-	creation_date: Option<OpValsInt64>,
-	modified_date: Option<OpValsInt64>,
+	#[modql(to_sea_value_fn = "time_to_sea_value")]
+	creation_date: Option<OpValsValue>,
+	#[modql(to_sea_value_fn = "time_to_sea_value")]
+	modified_date: Option<OpValsValue>,
 	owner: Option<OpValsInt64>,
 	last_edit_user: Option<OpValsInt64>,
 	url: Option<OpValsString>,
@@ -96,7 +116,7 @@ impl DocumentBmc {
 			archive_id: document_c.archive_id,
 			name: document_c.name,
 			doc_type: document_c.doc_type,
-			modified_date: OffsetDateTime::unix_timestamp(OffsetDateTime::now_utc()),
+			modified_date: OffsetDateTime::now_utc(),
 			owner: ctx.user_id(),
 			last_edit_user: ctx.user_id(),
 			url: document_c.url,
@@ -124,7 +144,7 @@ impl DocumentBmc {
 	) -> Result<()> {
 		let document = DocumentForUpdateInsert {
 			name: document_u.name,
-			modified_date: OffsetDateTime::unix_timestamp(OffsetDateTime::now_utc()),
+			modified_date: OffsetDateTime::now_utc(),
 			last_edit_user: ctx.user_id(),
 		};
 

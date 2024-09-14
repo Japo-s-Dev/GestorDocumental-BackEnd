@@ -1,26 +1,19 @@
-mod archive_rpc;
 mod config;
-mod datatype_rpc;
-mod document_rpc;
 mod error;
-mod index_rpc;
 mod params;
-mod project_rpc;
-mod role_rpc;
-mod search_operations_rpc;
-mod separator_rpc;
-mod user_rpc;
-mod value_rpc;
+mod rpcs;
 
 pub use self::error::{Error, Result};
-use self::{
+
+pub use params::*;
+
+use self::rpcs::{
 	archive_rpc::*, datatype_rpc::*, document_rpc::*, index_rpc::*, project_rpc::*,
 	role_rpc::*, search_operations_rpc::*, separator_rpc::*, user_rpc::*,
 	value_rpc::*,
 };
 use axum::body::Bytes;
 use lib_core::{ctx::Ctx, model::ModelManager};
-use params::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_value, to_value, Value};
 
@@ -47,7 +40,7 @@ macro_rules! exec_rpc_fn {
 	($rpc_fn:expr, $ctx:expr, $mm:expr, $rpc_params: expr) => {{
 		let rpc_fn_name = stringify!($rpc_fn);
 
-		let params = $rpc_params.ok_or(Error::RpcMisingParams {
+		let params = $rpc_params.ok_or(Error::RpcMissingParams {
 			rpc_method: rpc_fn_name.to_string(),
 		})?;
 
@@ -56,6 +49,64 @@ macro_rules! exec_rpc_fn {
 		})?;
 
 		$rpc_fn($ctx, $mm, params).await.map(to_value)??
+	}};
+
+	// With Params and file
+	// When file is required
+	($rpc_fn:expr, $ctx:expr, $mm:expr, $rpc_params:expr, $rpc_file:expr, true) => {{
+		let rpc_fn_name = stringify!($rpc_fn);
+
+		// Extract and parse parameters
+		let params = $rpc_params.ok_or(Error::RpcMissingParams {
+			rpc_method: rpc_fn_name.to_string(),
+		})?;
+
+		let params = from_value(params).map_err(|_| Error::RpcFailJsonParams {
+			rpc_method: rpc_fn_name.to_string(),
+		})?;
+
+		// File is required; unwrap or return error
+		let file = $rpc_file.ok_or(Error::FileMissing)?;
+		// Validate file contents
+		if file.bytes.is_empty()
+			|| file.file_name.is_empty()
+			|| file.content_type.is_empty()
+		{
+			return Err(Error::InvalidFile);
+		}
+
+		// Call the RPC function with `File`
+		$rpc_fn($ctx, $mm, params, file).await.map(to_value)??
+	}};
+
+	// When file is optional
+	($rpc_fn:expr, $ctx:expr, $mm:expr, $rpc_params:expr, $rpc_file:expr, false) => {{
+		let rpc_fn_name = stringify!($rpc_fn);
+
+		// Extract and parse parameters
+		let params = $rpc_params.ok_or(Error::RpcMissingParams {
+			rpc_method: rpc_fn_name.to_string(),
+		})?;
+
+		let params = from_value(params).map_err(|_| Error::RpcFailJsonParams {
+			rpc_method: rpc_fn_name.to_string(),
+		})?;
+
+		// File is optional; pass as `Option<File>`
+		// Optionally validate if file is present
+		if let Some(ref file) = $rpc_file {
+			if file.bytes.is_empty()
+				|| file.file_name.is_empty()
+				|| file.content_type.is_empty()
+			{
+				return Err(Error::InvalidFile);
+			}
+		}
+
+		// Call the RPC function with `Option<File>`
+		$rpc_fn($ctx, $mm, params, $rpc_file)
+			.await
+			.map(to_value)??
 	}};
 
 	// Without Params
@@ -68,7 +119,7 @@ pub async fn exec_rpc(
 	ctx: Ctx,
 	mm: ModelManager,
 	rpc_req: RpcRequest,
-	_file: Option<File>,
+	file: Option<File>,
 ) -> Result<Value> {
 	let rpc_method = rpc_req.method;
 	let rpc_params = rpc_req.params;
@@ -131,10 +182,14 @@ pub async fn exec_rpc(
 		"delete_separator" => exec_rpc_fn!(delete_separator, ctx, mm, rpc_params),
 
 		// Document CRUD
-		"create_document" => exec_rpc_fn!(create_document, ctx, mm, rpc_params),
+		"create_document" => {
+			exec_rpc_fn!(create_document, ctx, mm, rpc_params, file, true)
+		}
 		"list_documents" => exec_rpc_fn!(list_documents, ctx, mm, rpc_params),
 		"get_document" => exec_rpc_fn!(get_document, ctx, mm, rpc_params),
-		"update_document" => exec_rpc_fn!(update_document, ctx, mm, rpc_params),
+		"update_document" => {
+			exec_rpc_fn!(update_document, ctx, mm, rpc_params, file, false)
+		}
 		"delete_document" => exec_rpc_fn!(delete_document, ctx, mm, rpc_params),
 
 		// Search Operations
@@ -152,38 +207,8 @@ pub async fn exec_rpc(
 /*
 *
 
-	let rpc_req: RpcRequest = match json_data {
-		Some(data) => match serde_json::from_str(&data) {
-			Ok(req) => req,
-			Err(_) => {
-				return Error::RpcFailJsonParams {
-					rpc_method: "Invalid JSON".to_string(),
-				}
-				.into_response();
-			}
-		},
-		None => {
-			return Error::RpcMisingParams {
-				rpc_method: "Missing Params".to_string(),
-			}
-			.into_response();
-		}
-	};
 
-	let allowed_methods = get_file_insertion_methods();
-
-	let s3_client = mm.bucket.clone();
-
-	// Check if file upload is allowed for this method
 	if let Some(mut file) = file_data {
-		if !allowed_methods.contains(rpc_req.method.as_str()) {
-			return Error::RpcInvalidMethod {
-				rpc_method: rpc_req.method.clone(),
-				message: "This method does not allow file insertion.".to_string(),
-			}
-			.into_response();
-		}
-
 		// Upload the file to S3
 		let s3_client = mm.bucket.clone();
 		if let Err(e) = upload_to_s3(&s3_client, &mut file).await {

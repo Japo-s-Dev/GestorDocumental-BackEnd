@@ -1,4 +1,4 @@
-use super::{ParamsForCreate, ParamsForUpdate, ParamsIded};
+use crate::params::ParamsIded;
 use crate::Result;
 use lib_core::ctx::Ctx;
 use lib_core::model::index::{IndexBmc, IndexWithDatatype};
