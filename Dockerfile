@@ -11,7 +11,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 RUN apt-get install -y build-essential
-RUN yes | apt-get install libssl-dev pkg-config
+RUN yes | apt-get install pkg-config
 
 
 # Establece el directorio de trabajo
@@ -23,5 +23,5 @@ WORKDIR /src/server
 RUN cargo install cargo-watch
 
 # Mantén el contenedor en ejecución
-CMD ["cargo", "watch", "-q","-c","-w","crates/","-w",".cargo/","-x","run"]
+CMD ["cargo", "watch", "-q","-c","-w","src/","-w",".cargo/","-x","run"]
 #CMD ["cargo", "run", "-q"]
