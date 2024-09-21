@@ -19,6 +19,7 @@ pub struct ProjectForOp {
 	pub project_name: String,
 }
 
+#[allow(dead_code)]
 pub trait ProjectBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
 impl ProjectBy for Project {}

@@ -18,6 +18,7 @@ pub struct DatatypeForOp {
 	pub datatype_name: String,
 }
 
+#[allow(dead_code)]
 pub trait DatatypeBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
 impl DatatypeBy for Datatype {}

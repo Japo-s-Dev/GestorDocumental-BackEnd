@@ -1,6 +1,6 @@
 use crate::core::ctx::Ctx;
 use crate::core::model::user::{
-	User, UserBmc, UserFilter, UserForCreate, UserForUpdate,
+	User, UserBmc, UserFilter, UserForCreate, UserForUpdate, UserForUpdatePwd,
 };
 use crate::core::model::ModelManager;
 use crate::rpc::params::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
@@ -63,6 +63,20 @@ pub async fn get_user(
 	params: ParamsIded,
 ) -> Result<User> {
 	let ParamsIded { id } = params;
+
+	let user = UserBmc::get(&ctx, &mm, id).await?;
+
+	Ok(user)
+}
+
+pub async fn update_pwd(
+	ctx: Ctx,
+	mm: ModelManager,
+	params: ParamsForUpdate<UserForUpdatePwd>,
+) -> Result<User> {
+	let ParamsForUpdate { id, data } = params;
+
+	UserBmc::update_pwd(&ctx, &mm, id, &data.pwd_clear).await?;
 
 	let user = UserBmc::get(&ctx, &mm, id).await?;
 

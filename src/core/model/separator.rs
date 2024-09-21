@@ -4,6 +4,8 @@ use crate::core::model::ModelManager;
 use crate::core::model::Result;
 use modql::field::{Fields, HasFields};
 use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsString};
+use sea_query::{Expr, Iden, PostgresQueryBuilder, Query};
+use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgRow;
 use sqlx::FromRow;
@@ -52,6 +54,12 @@ impl DbBmc for SeparatorBmc {
 	const TABLE: &'static str = "separator";
 }
 
+#[derive(Iden)]
+enum SeparatorIden {
+	Id,
+	ArchiveId,
+}
+
 impl SeparatorBmc {
 	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Separator> {
 		base::get::<Self, _>(ctx, mm, id).await
@@ -87,5 +95,29 @@ impl SeparatorBmc {
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
 		base::delete::<Self>(ctx, mm, id).await
+	}
+
+	pub async fn get_separators_by_archive<E>(
+		_ctx: &Ctx,
+		mm: &ModelManager,
+		id: i64,
+	) -> Result<Vec<E>>
+	where
+		E: SeparatorBy,
+	{
+		let db = mm.db();
+
+		let mut query = Query::select();
+		query
+			.from(Self::table_ref())
+			.columns(E::field_column_refs())
+			.and_where(Expr::col(SeparatorIden::ArchiveId).eq(id));
+
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+		let entities = sqlx::query_as_with::<_, E, _>(&sql, values)
+			.fetch_all(db)
+			.await?;
+
+		Ok(entities)
 	}
 }
