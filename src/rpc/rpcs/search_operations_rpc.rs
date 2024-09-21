@@ -29,6 +29,7 @@ pub async fn get_project_fields(
 #[derive(Serialize)]
 pub struct Node {
 	name: String,
+	id: Option<i64>,
 	children: Vec<Node>,
 	documents: Vec<Document>,
 }
@@ -36,8 +37,8 @@ pub struct Node {
 pub fn build_tree(
 	parent_name: String,
 	parent_id: Option<i64>,
-	separators_by_parent: HashMap<Option<i64>, Vec<Separator>>,
-	documents_by_separator: HashMap<Option<i64>, Vec<Document>>,
+	separators_by_parent: HashMap<Option<i64>, Vec<Separator>>, // Clonamos aquí
+	documents_by_separator: HashMap<Option<i64>, Vec<Document>>, // Clonamos aquí
 ) -> BoxFuture<'static, Result<Node>> {
 	async move {
 		let mut children_nodes = Vec::new();
@@ -49,8 +50,8 @@ pub fn build_tree(
 				let child_node = build_tree(
 					sep.name.clone(),
 					Some(sep.id),
-					separators_by_parent.clone(),
-					documents_by_separator.clone(),
+					separators_by_parent.clone(), // Clonamos aquí para evitar problemas de vida útil
+					documents_by_separator.clone(), // Clonamos aquí también
 				)
 				.await?;
 
@@ -58,6 +59,7 @@ pub fn build_tree(
 			}
 		}
 
+		// Procesar documentos
 		if let Some(docs) = documents_by_separator.get(&parent_id) {
 			for doc in docs {
 				document_nodes.push(doc.clone());
@@ -65,6 +67,7 @@ pub fn build_tree(
 		}
 
 		Ok(Node {
+			id: parent_id, // Aquí asignamos el id del separador actual
 			name: parent_name,
 			children: children_nodes,
 			documents: document_nodes,

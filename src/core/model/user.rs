@@ -28,6 +28,11 @@ pub struct UserForCreate {
 	pub assigned_role: String,
 }
 
+#[derive(Deserialize, Fields)]
+pub struct UserForUpdatePwd {
+	pub pwd_clear: String,
+}
+
 #[derive(Fields)]
 pub struct UserForInsert {
 	pub username: String,
@@ -141,8 +146,8 @@ impl UserBmc {
 		})
 		.await?;
 
-		let mut fields = Fields::new(vec![Field::new(UserIden::Pwd, pwd.into())]);
-		add_timestamps_for_update(&mut fields, ctx.user_id());
+		let fields = Fields::new(vec![Field::new(UserIden::Pwd, pwd.into())]);
+		//add_timestamps_for_update(&mut fields, ctx.user_id());
 
 		let fields = fields.for_sea_update();
 		let mut query = Query::update();

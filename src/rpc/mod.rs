@@ -130,6 +130,8 @@ pub async fn exec_rpc(
 		"update_user" => exec_rpc_fn!(update_user, ctx, mm, rpc_params),
 		"delete_user" => exec_rpc_fn!(delete_user, ctx, mm, rpc_params),
 
+		"update_pwd" => exec_rpc_fn!(update_pwd, ctx, mm, rpc_params),
+
 		// Role CRUD
 		"create_role" => exec_rpc_fn!(create_role, ctx, mm, rpc_params),
 		"list_roles" => exec_rpc_fn!(list_roles, ctx, mm, rpc_params),
