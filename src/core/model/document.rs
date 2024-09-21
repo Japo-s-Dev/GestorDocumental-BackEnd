@@ -8,6 +8,8 @@ use modql::field::{Fields, HasFields};
 use modql::filter::{
 	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
 };
+use sea_query::{Expr, Iden, PostgresQueryBuilder, Query};
+use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::postgres::PgRow;
@@ -18,6 +20,7 @@ use sqlx::FromRow;
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Document {
 	pub id: i64,
+	pub separator_id: i64,
 	pub archive_id: i64,
 	pub name: String,
 	pub doc_type: String,
@@ -32,11 +35,12 @@ pub struct Document {
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct DocumentForRequest {
-	pub archive_id: i64,
+	pub separator_id: i64,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct DocumentForCreate {
+	pub separator_id: i64,
 	pub archive_id: i64,
 	pub name: String,
 	pub doc_type: String,
@@ -46,6 +50,7 @@ pub struct DocumentForCreate {
 #[derive(Clone, Fields, FromRow, Debug, Deserialize)]
 pub struct DocumentForUpdate {
 	pub archive_id: i64,
+	pub separator_id: i64,
 	pub name: String,
 	pub doc_type: String,
 	pub url: String,
@@ -54,6 +59,7 @@ pub struct DocumentForUpdate {
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct DocumentForCreateInsert {
+	pub separator_id: i64,
 	pub archive_id: i64,
 	pub name: String,
 	pub doc_type: String,
@@ -71,8 +77,11 @@ pub struct DocumentForUpdateInsert {
 	#[serde_as(as = "Rfc3339")]
 	pub modified_date: OffsetDateTime,
 	pub last_edit_user: i64,
+	pub separator_id: i64,
+	pub archive_id: i64,
 }
 
+#[allow(dead_code)]
 pub trait DocumentBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
 impl DocumentBy for Document {}
@@ -85,6 +94,7 @@ impl DocumentBy for DocumentForCreateInsert {}
 pub struct DocumentFilter {
 	id: Option<OpValsInt64>,
 	archive_id: Option<OpValsInt64>,
+	separator_id: Option<OpValsInt64>,
 	name: Option<OpValsString>,
 	doc_type: Option<OpValsString>,
 	#[modql(to_sea_value_fn = "time_to_sea_value")]
@@ -94,6 +104,12 @@ pub struct DocumentFilter {
 	owner: Option<OpValsInt64>,
 	last_edit_user: Option<OpValsInt64>,
 	url: Option<OpValsString>,
+}
+
+#[derive(Iden)]
+enum DocumentIden {
+	Id,
+	ArchiveId,
 }
 
 pub struct DocumentBmc;
@@ -114,6 +130,7 @@ impl DocumentBmc {
 	) -> Result<i64> {
 		let document = DocumentForCreateInsert {
 			archive_id: document_c.archive_id,
+			separator_id: document_c.separator_id,
 			name: document_c.name,
 			doc_type: document_c.doc_type,
 			modified_date: OffsetDateTime::now_utc(),
@@ -146,6 +163,8 @@ impl DocumentBmc {
 			name: document_u.name,
 			modified_date: OffsetDateTime::now_utc(),
 			last_edit_user: ctx.user_id(),
+			archive_id: document_u.archive_id,
+			separator_id: document_u.separator_id,
 		};
 
 		base::update::<Self, _>(ctx, mm, id, document).await
@@ -153,5 +172,29 @@ impl DocumentBmc {
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
 		base::delete::<Self>(ctx, mm, id).await
+	}
+
+	pub async fn get_documents_by_archive<E>(
+		_ctx: &Ctx,
+		mm: &ModelManager,
+		id: i64,
+	) -> Result<Vec<E>>
+	where
+		E: DocumentBy,
+	{
+		let db = mm.db();
+
+		let mut query = Query::select();
+		query
+			.from(Self::table_ref())
+			.columns(E::field_column_refs())
+			.and_where(Expr::col(DocumentIden::ArchiveId).eq(id));
+
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+		let entities = sqlx::query_as_with::<_, E, _>(&sql, values)
+			.fetch_all(db)
+			.await?;
+
+		Ok(entities)
 	}
 }

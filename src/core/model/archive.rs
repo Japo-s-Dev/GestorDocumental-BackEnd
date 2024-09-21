@@ -73,6 +73,7 @@ pub struct ArchiveFilter {
 	tag: Option<OpValsString>,
 }
 
+#[allow(dead_code)]
 pub trait ArchiveBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
 impl ArchiveBy for Archive {}

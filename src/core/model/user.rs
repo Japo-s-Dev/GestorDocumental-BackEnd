@@ -135,10 +135,11 @@ impl UserBmc {
 		let db = mm.db();
 
 		let user: UserForLogin = Self::get(ctx, mm, id).await?;
-		let pwd = hash_pwd(&ContentToHash {
+		let pwd = hash_pwd(ContentToHash {
 			content: pwd_clear.to_string(),
 			salt: user.pwd_salt,
-		})?;
+		})
+		.await?;
 
 		let mut fields = Fields::new(vec![Field::new(UserIden::Pwd, pwd.into())]);
 		add_timestamps_for_update(&mut fields, ctx.user_id());

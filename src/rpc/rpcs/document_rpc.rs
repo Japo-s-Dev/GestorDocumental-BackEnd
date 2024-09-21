@@ -3,6 +3,7 @@ use crate::core::model::document::{
 	Document, DocumentBmc, DocumentFilter, DocumentForCreate, DocumentForRequest,
 	DocumentForUpdate,
 };
+use crate::core::model::separator::SeparatorBmc;
 use crate::core::model::ModelManager;
 use crate::rpc::config::rpc_config;
 use crate::rpc::params::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
@@ -21,8 +22,11 @@ pub async fn create_document(
 
 	let ParamsForCreate { data } = params;
 
+	let separator = SeparatorBmc::get(&ctx, &mm, data.separator_id).await?;
+
 	let final_data = DocumentForCreate {
-		archive_id: data.archive_id,
+		archive_id: separator.archive_id,
+		separator_id: data.separator_id,
 		name: file.file_name.clone(),
 		doc_type: file.content_type.clone(),
 		url: file.url.clone(),
@@ -66,30 +70,28 @@ pub async fn update_document(
 	let s3_client = mm.bucket.clone();
 	let ParamsForUpdate { id, data } = params;
 
-	// Retrieve the updated document
 	let document = DocumentBmc::get(&ctx, &mm, id).await?;
 
+	let separator = SeparatorBmc::get(&ctx, &mm, data.separator_id).await?;
+
 	let mut new_data = DocumentForUpdate {
-		archive_id: data.archive_id,
+		archive_id: separator.archive_id,
+		separator_id: data.separator_id,
 		name: document.name,
 		doc_type: document.doc_type,
 		url: document.url,
 	};
 
 	if let Some(mut file) = file {
-		// Upload the file to S3
 		upload_to_s3(&s3_client, &mut file).await?;
 
-		// Update the data with the file information
 		new_data.name = file.file_name.clone();
 		new_data.doc_type = file.content_type.clone();
 		new_data.url = file.url.clone();
 	}
 
-	// Proceed to update the document
 	DocumentBmc::update(&ctx, &mm, id, new_data).await?;
 
-	// Retrieve the updated document
 	let document = DocumentBmc::get(&ctx, &mm, id).await?;
 
 	Ok(document)

@@ -194,6 +194,9 @@ pub async fn exec_rpc(
 		"get_project_fields" => {
 			exec_rpc_fn!(get_project_fields, ctx, mm, rpc_params)
 		}
+		"get_file_tree" => {
+			exec_rpc_fn!(get_file_tree, ctx, mm, rpc_params)
+		}
 
 		// -- Fallback error
 		_ => return Err(Error::RpcMethodUnknown(rpc_method)),
@@ -201,64 +204,3 @@ pub async fn exec_rpc(
 
 	Ok(result_json)
 }
-
-/*
-*
-
-
-	if let Some(mut file) = file_data {
-		// Upload the file to S3
-		let s3_client = mm.bucket.clone();
-		if let Err(e) = upload_to_s3(&s3_client, &mut file).await {
-			return Error::RpcInvalidMethod {
-				rpc_method: rpc_req.method.clone(),
-				message: format!("File upload failed: {}", e),
-			}
-			.into_response();
-		}
-
-		// Update the params after file upload
-		if rpc_req.method == "create_document" {
-			let mut params: ParamsForCreate<DocumentForCreate> =
-				match serde_json::from_value(rpc_req.params.unwrap()) {
-					Ok(p) => p,
-					Err(_) => {
-						return Error::RpcFailJsonParams {
-							rpc_method: "Invalid Params for Create".to_string(),
-						}
-						.into_response();
-					}
-				};
-
-			// Set the `url`, `doc_type`, and `file_name`
-			params.data.url = file.url.clone();
-			params.data.doc_type = file.content_type.clone();
-			params.data.name = file.file_name.clone();
-
-			// Call the create_document function
-			let document = create_document(ctx, mm, params).await.unwrap();
-			return Json(document).into_response();
-		} else if rpc_req.method == "update_document" {
-			let mut params: ParamsForUpdate<DocumentForUpdate> =
-				match serde_json::from_value(rpc_req.params.unwrap()) {
-					Ok(p) => p,
-					Err(_) => {
-						return Error::RpcFailJsonParams {
-							rpc_method: "Invalid Params for Update".to_string(),
-						}
-						.into_response();
-					}
-				};
-
-			// Set the `url`, `doc_type`, and `file_name`
-			params.data.url = file.url.clone();
-			params.data.doc_type = file.content_type.clone();
-			params.data.name = file.file_name.clone();
-
-			// Call the update_document function
-			let document = update_document(ctx, mm, params).await.unwrap();
-			return Json(document).into_response();
-		}
-	}
-
-* */

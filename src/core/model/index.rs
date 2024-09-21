@@ -43,6 +43,7 @@ pub struct IndexWithDatatype {
 	datatype_name: String,
 }
 
+#[allow(dead_code)]
 pub trait IndexBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
 impl IndexBy for Index {}
