@@ -22,6 +22,7 @@ pub struct RoleForOp {
 	pub description: String,
 }
 
+#[allow(dead_code)]
 pub trait RoleBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
 impl RoleBy for Role {}

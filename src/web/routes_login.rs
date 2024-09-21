@@ -42,12 +42,13 @@ async fn api_login_handler(
 	};
 
 	let scheme_status = pwd::validate_pwd(
-		&ContentToHash {
+		ContentToHash {
 			salt: user.pwd_salt,
 			content: pwd_clear.clone(),
 		},
-		&pwd,
+		pwd,
 	)
+	.await
 	.map_err(|_| Error::LoginFailPwdNotMatching { user_id })?;
 
 	if let SchemeStatus::Outdated = scheme_status {

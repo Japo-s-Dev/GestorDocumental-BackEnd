@@ -38,7 +38,7 @@ jobs:
     - name: Build
       run: |
         source $HOME/.cargo/env
-        cargo build -p web-server --release
+        cargo build --release
 
 #    - name: Test
  #     run: |
