@@ -14,9 +14,11 @@ use sqlx::FromRow;
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
-pub struct Datatype {
+pub struct Comment {
 	pub id: i64,
-	pub datatype_name: String,
+	pub archive_id: i64,
+	pub text: String,
+	pub user_id: i64,
 	pub cid: i64,
 	#[serde_as(as = "Rfc3339")]
 	pub ctime: OffsetDateTime,
@@ -26,21 +28,30 @@ pub struct Datatype {
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
-pub struct DatatypeForOp {
-	pub datatype_name: String,
+pub struct CommentForOp {
+	pub text: String,
+	pub archive_id: i64,
+}
+
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct CommentForOpInsert {
+	pub text: String,
+	pub archive_id: i64,
+	pub user_id: i64,
 }
 
 #[allow(dead_code)]
-pub trait DatatypeBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
+pub trait CommentBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
-impl DatatypeBy for Datatype {}
-impl DatatypeBy for DatatypeForOp {}
+impl CommentBy for Comment {}
+impl CommentBy for CommentForOp {}
 
 #[derive(FilterNodes, Deserialize, Default, Debug)]
-pub struct DatatypeFilter {
+pub struct CommentFilter {
 	id: Option<OpValsInt64>,
 
-	datatype_name: Option<OpValsInt64>,
+	archive_id: Option<OpValsInt64>,
+	user_id: Option<OpValsInt64>,
 	cid: Option<OpValsInt64>,
 	#[modql(to_sea_value_fn = "time_to_sea_value")]
 	ctime: Option<OpValsValue>,
@@ -49,33 +60,39 @@ pub struct DatatypeFilter {
 	mtime: Option<OpValsValue>,
 }
 
-pub struct DatatypeBmc;
+pub struct CommentBmc;
 
-impl DbBmc for DatatypeBmc {
-	const TABLE: &'static str = "datatype";
+impl DbBmc for CommentBmc {
+	const TABLE: &'static str = "comment";
 }
 
-impl DatatypeBmc {
-	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Datatype> {
+impl CommentBmc {
+	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Comment> {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 
 	pub async fn create(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		datatype_c: DatatypeForOp,
+		comment_c: CommentForOp,
 	) -> Result<i64> {
-		let datatype_id = base::create::<Self, _>(ctx, mm, datatype_c).await?;
+		let comment_data = CommentForOpInsert {
+			archive_id: comment_c.archive_id,
+			text: comment_c.text,
+			user_id: ctx.user_id(),
+		};
 
-		Ok(datatype_id)
+		let comment_id = base::create::<Self, _>(ctx, mm, comment_data).await?;
+
+		Ok(comment_id)
 	}
 
 	pub async fn list(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		filters: Option<Vec<DatatypeFilter>>,
+		filters: Option<Vec<CommentFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Datatype>> {
+	) -> Result<Vec<Comment>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 
@@ -83,9 +100,9 @@ impl DatatypeBmc {
 		ctx: &Ctx,
 		mm: &ModelManager,
 		id: i64,
-		datatype_u: DatatypeForOp,
+		comment_u: CommentForOp,
 	) -> Result<()> {
-		base::update::<Self, _>(ctx, mm, id, datatype_u).await
+		base::update::<Self, _>(ctx, mm, id, comment_u).await
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {

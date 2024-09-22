@@ -3,9 +3,11 @@
 pub mod archive;
 mod base;
 pub mod bucket;
+pub mod comment;
 pub mod datatype;
 pub mod document;
 mod error;
+pub mod event;
 pub mod index;
 pub mod modql_utils;
 pub mod project;

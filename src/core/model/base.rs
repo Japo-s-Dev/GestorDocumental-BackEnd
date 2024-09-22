@@ -61,7 +61,7 @@ pub fn compute_list_options(
 	}
 }
 
-pub async fn create<MC, E>(_ctx: &Ctx, mm: &ModelManager, data: E) -> Result<i64>
+pub async fn create<MC, E>(ctx: &Ctx, mm: &ModelManager, data: E) -> Result<i64>
 where
 	MC: DbBmc,
 	E: HasFields,
@@ -69,8 +69,8 @@ where
 	let db = mm.db();
 
 	// -- Prep data
-	let fields = data.not_none_fields();
-	//add_timestamps_for_create(&mut fields, ctx.user_id());
+	let mut fields = data.not_none_fields();
+	add_timestamps_for_create(&mut fields, ctx.user_id());
 	let (columns, sea_values) = fields.for_sea_insert();
 
 	// -- Build query
@@ -152,7 +152,7 @@ where
 }
 
 pub async fn update<MC, E>(
-	_ctx: &Ctx,
+	ctx: &Ctx,
 	mm: &ModelManager,
 	id: i64,
 	data: E,
@@ -163,8 +163,8 @@ where
 {
 	let db = mm.db();
 
-	let fields = data.not_none_fields();
-	//add_timestamps_for_update(&mut fields, ctx.user_id());
+	let mut fields = data.not_none_fields();
+	add_timestamps_for_update(&mut fields, ctx.user_id());
 	let fields = fields.for_sea_update();
 
 	let mut query = Query::update();

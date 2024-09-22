@@ -1,11 +1,10 @@
 use crate::core::ctx::Ctx;
 use crate::core::model::base::{self, DbBmc};
-use crate::core::model::modql_utils::time_to_sea_value;
 use crate::core::model::ModelManager;
 use crate::core::model::Result;
 use crate::utils::time::Rfc3339;
 use modql::field::{Fields, HasFields};
-use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsValue};
+use modql::filter::{FilterNodes, ListOptions, OpValsInt64};
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::postgres::PgRow;
@@ -14,9 +13,12 @@ use sqlx::FromRow;
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
-pub struct Datatype {
+pub struct Event {
 	pub id: i64,
-	pub datatype_name: String,
+	pub archive_id: i64,
+	pub user_id: i64,
+	pub action: String,
+	pub object: String,
 	pub cid: i64,
 	#[serde_as(as = "Rfc3339")]
 	pub ctime: OffsetDateTime,
@@ -26,56 +28,50 @@ pub struct Datatype {
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
-pub struct DatatypeForOp {
-	pub datatype_name: String,
+pub struct EventForOp {
+	pub text: String,
 }
 
 #[allow(dead_code)]
-pub trait DatatypeBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
+pub trait EventBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
-impl DatatypeBy for Datatype {}
-impl DatatypeBy for DatatypeForOp {}
+impl EventBy for Event {}
+impl EventBy for EventForOp {}
 
 #[derive(FilterNodes, Deserialize, Default, Debug)]
-pub struct DatatypeFilter {
+pub struct EventFilter {
 	id: Option<OpValsInt64>,
 
 	datatype_name: Option<OpValsInt64>,
-	cid: Option<OpValsInt64>,
-	#[modql(to_sea_value_fn = "time_to_sea_value")]
-	ctime: Option<OpValsValue>,
-	mid: Option<OpValsInt64>,
-	#[modql(to_sea_value_fn = "time_to_sea_value")]
-	mtime: Option<OpValsValue>,
 }
 
-pub struct DatatypeBmc;
+pub struct EventBmc;
 
-impl DbBmc for DatatypeBmc {
-	const TABLE: &'static str = "datatype";
+impl DbBmc for EventBmc {
+	const TABLE: &'static str = "event";
 }
 
-impl DatatypeBmc {
-	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Datatype> {
+impl EventBmc {
+	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Event> {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 
 	pub async fn create(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		datatype_c: DatatypeForOp,
+		event_c: EventForOp,
 	) -> Result<i64> {
-		let datatype_id = base::create::<Self, _>(ctx, mm, datatype_c).await?;
+		let event_id = base::create::<Self, _>(ctx, mm, event_c).await?;
 
-		Ok(datatype_id)
+		Ok(event_id)
 	}
 
 	pub async fn list(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		filters: Option<Vec<DatatypeFilter>>,
+		filters: Option<Vec<EventFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Datatype>> {
+	) -> Result<Vec<Event>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 
@@ -83,9 +79,9 @@ impl DatatypeBmc {
 		ctx: &Ctx,
 		mm: &ModelManager,
 		id: i64,
-		datatype_u: DatatypeForOp,
+		event_u: EventForOp,
 	) -> Result<()> {
-		base::update::<Self, _>(ctx, mm, id, datatype_u).await
+		base::update::<Self, _>(ctx, mm, id, event_u).await
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {

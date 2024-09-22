@@ -1,21 +1,34 @@
 use crate::core::ctx::Ctx;
 use crate::core::model::base::{self, DbBmc};
+use crate::core::model::modql_utils::time_to_sea_value;
 use crate::core::model::ModelManager;
 use crate::core::model::Result;
+use crate::utils::time::Rfc3339;
 use modql::field::{Fields, HasFields};
-use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsString};
+use modql::filter::{
+	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
+};
 use sea_query::{Expr, Iden, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use sqlx::postgres::PgRow;
+use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
+#[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Separator {
 	pub id: i64,
 	pub name: String,
 	pub parent_id: Option<i64>,
 	pub archive_id: i64,
+	pub cid: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub ctime: OffsetDateTime,
+	pub mid: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub mtime: OffsetDateTime,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
@@ -48,6 +61,12 @@ pub struct SeparatorFilter {
 	name: Option<OpValsString>,
 	parent_id: Option<OpValsInt64>,
 	archive_id: Option<OpValsInt64>,
+	cid: Option<OpValsInt64>,
+	#[modql(to_sea_value_fn = "time_to_sea_value")]
+	ctime: Option<OpValsValue>,
+	mid: Option<OpValsInt64>,
+	#[modql(to_sea_value_fn = "time_to_sea_value")]
+	mtime: Option<OpValsValue>,
 }
 
 impl DbBmc for SeparatorBmc {
