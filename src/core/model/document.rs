@@ -24,13 +24,15 @@ pub struct Document {
 	pub archive_id: i64,
 	pub name: String,
 	pub doc_type: String,
-	#[serde_as(as = "Rfc3339")]
-	pub creation_date: OffsetDateTime,
-	#[serde_as(as = "Rfc3339")]
-	pub modified_date: OffsetDateTime,
 	pub owner: i64,
 	pub last_edit_user: i64,
 	pub url: String,
+	pub cid: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub ctime: OffsetDateTime,
+	pub mid: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub mtime: OffsetDateTime,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
@@ -63,8 +65,6 @@ pub struct DocumentForCreateInsert {
 	pub archive_id: i64,
 	pub name: String,
 	pub doc_type: String,
-	#[serde_as(as = "Rfc3339")]
-	pub modified_date: OffsetDateTime,
 	pub owner: i64,
 	pub last_edit_user: i64,
 	pub url: String,
@@ -74,11 +74,11 @@ pub struct DocumentForCreateInsert {
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct DocumentForUpdateInsert {
 	pub name: String,
-	#[serde_as(as = "Rfc3339")]
-	pub modified_date: OffsetDateTime,
 	pub last_edit_user: i64,
 	pub separator_id: i64,
 	pub archive_id: i64,
+	pub url: String,
+	pub doc_type: String,
 }
 
 #[allow(dead_code)]
@@ -97,13 +97,15 @@ pub struct DocumentFilter {
 	separator_id: Option<OpValsInt64>,
 	name: Option<OpValsString>,
 	doc_type: Option<OpValsString>,
-	#[modql(to_sea_value_fn = "time_to_sea_value")]
-	creation_date: Option<OpValsValue>,
-	#[modql(to_sea_value_fn = "time_to_sea_value")]
-	modified_date: Option<OpValsValue>,
 	owner: Option<OpValsInt64>,
 	last_edit_user: Option<OpValsInt64>,
 	url: Option<OpValsString>,
+	cid: Option<OpValsInt64>,
+	#[modql(to_sea_value_fn = "time_to_sea_value")]
+	ctime: Option<OpValsValue>,
+	mid: Option<OpValsInt64>,
+	#[modql(to_sea_value_fn = "time_to_sea_value")]
+	mtime: Option<OpValsValue>,
 }
 
 #[derive(Iden)]
@@ -133,7 +135,6 @@ impl DocumentBmc {
 			separator_id: document_c.separator_id,
 			name: document_c.name,
 			doc_type: document_c.doc_type,
-			modified_date: OffsetDateTime::now_utc(),
 			owner: ctx.user_id(),
 			last_edit_user: ctx.user_id(),
 			url: document_c.url,
@@ -161,10 +162,11 @@ impl DocumentBmc {
 	) -> Result<()> {
 		let document = DocumentForUpdateInsert {
 			name: document_u.name,
-			modified_date: OffsetDateTime::now_utc(),
 			last_edit_user: ctx.user_id(),
 			archive_id: document_u.archive_id,
 			separator_id: document_u.separator_id,
+			url: document_u.url,
+			doc_type: document_u.doc_type,
 		};
 
 		base::update::<Self, _>(ctx, mm, id, document).await
