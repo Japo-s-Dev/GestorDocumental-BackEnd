@@ -6,9 +6,9 @@ mod rpcs;
 pub use self::error::{Error, Result};
 
 use self::rpcs::{
-	archive_rpc::*, datatype_rpc::*, document_rpc::*, index_rpc::*, project_rpc::*,
-	role_rpc::*, search_operations_rpc::*, separator_rpc::*, user_rpc::*,
-	value_rpc::*,
+	archive_rpc::*, comment_rpc::*, datatype_rpc::*, document_rpc::*, index_rpc::*,
+	project_rpc::*, role_rpc::*, search_operations_rpc::*, separator_rpc::*,
+	user_rpc::*, value_rpc::*,
 };
 use crate::core::{ctx::Ctx, model::ModelManager};
 use axum::body::Bytes;
@@ -191,6 +191,11 @@ pub async fn exec_rpc(
 			exec_rpc_fn!(update_document, ctx, mm, rpc_params, file, false)
 		}
 		"delete_document" => exec_rpc_fn!(delete_document, ctx, mm, rpc_params),
+
+		// Comment CRUD
+		"create_comment" => exec_rpc_fn!(create_comment, ctx, mm, rpc_params),
+		"get_comment" => exec_rpc_fn!(get_comment, ctx, mm, rpc_params),
+		"list_comments" => exec_rpc_fn!(list_comments, ctx, mm, rpc_params),
 
 		// Search Operations
 		"get_project_fields" => {

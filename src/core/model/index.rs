@@ -1,15 +1,20 @@
 use crate::core::ctx::Ctx;
 use crate::core::model::base::{self, DbBmc};
+use crate::core::model::modql_utils::time_to_sea_value;
 use crate::core::model::ModelManager;
 use crate::core::model::Result;
+use crate::utils::time::Rfc3339;
 use modql::field::{Fields, HasFields};
 use modql::filter::{
-	FilterNodes, ListOptions, OpValsBool, OpValsInt64, OpValsString,
+	FilterNodes, ListOptions, OpValsBool, OpValsInt64, OpValsString, OpValsValue,
 };
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use sqlx::postgres::PgRow;
+use sqlx::types::time::OffsetDateTime;
 use sqlx::{FromRow, Row};
 
+#[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Index {
 	pub id: i64,
@@ -17,6 +22,12 @@ pub struct Index {
 	pub project_id: i64,
 	pub required: bool,
 	pub index_name: String,
+	pub cid: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub ctime: OffsetDateTime,
+	pub mid: i64,
+	#[serde_as(as = "Rfc3339")]
+	pub mtime: OffsetDateTime,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
@@ -34,7 +45,7 @@ pub struct IndexForUpdate {
 	pub index_name: String,
 }
 
-#[derive(sqlx::FromRow, Debug, Serialize)]
+#[derive(FromRow, Debug, Serialize)]
 pub struct IndexWithDatatype {
 	id: i64,
 	project_id: i64,
@@ -57,6 +68,12 @@ pub struct IndexFilter {
 	project_id: Option<OpValsInt64>,
 	required: Option<OpValsBool>,
 	index_name: Option<OpValsString>,
+	cid: Option<OpValsInt64>,
+	#[modql(to_sea_value_fn = "time_to_sea_value")]
+	ctime: Option<OpValsValue>,
+	mid: Option<OpValsInt64>,
+	#[modql(to_sea_value_fn = "time_to_sea_value")]
+	mtime: Option<OpValsValue>,
 }
 
 pub struct IndexBmc;
