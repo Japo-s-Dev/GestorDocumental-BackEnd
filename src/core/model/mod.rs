@@ -12,6 +12,7 @@ pub mod index;
 pub mod modql_utils;
 pub mod project;
 pub mod role;
+pub mod search_operations;
 pub mod separator;
 mod store;
 pub mod user;

@@ -132,21 +132,6 @@ CREATE TABLE IF NOT EXISTS
     );
 
 CREATE TABLE IF NOT EXISTS
-    public.event (
-        id BIGSERIAL PRIMARY KEY,
-        archive_id BIGINT NOT NULL,
-        user_id BIGINT NOT NULL,
-        action varchar(128) NOT NULL,
-        object varchar(128) NOT NULL,
-        cid bigint NOT NULL,
-        ctime timestamp with time zone NOT NULL default now(),
-        mid bigint NOT NULL,
-        mtime timestamp with time zone NOT NULL  default now(),
-        FOREIGN KEY (archive_id) REFERENCES archive(id),
-        FOREIGN KEY (user_id) REFERENCES "user" (id)
-    );
-
-CREATE TABLE IF NOT EXISTS
     public.separator (
         id BIGSERIAL PRIMARY KEY,
         name VARCHAR(50) NOT NULL,
@@ -239,5 +224,86 @@ CREATE TABLE IF NOT EXISTS
         FOREIGN KEY (separator_id) REFERENCES separator(id),
         FOREIGN KEY (role_name) REFERENCES role(role_name)
 );
+
+CREATE TABLE IF NOT EXISTS public.event (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    action VARCHAR(128) NOT NULL,
+    object VARCHAR(128) NOT NULL,
+    object_id BIGINT NOT NULL,
+    archive_id BIGINT NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    FOREIGN KEY (archive_id) REFERENCES public.archive(id),
+    FOREIGN KEY (user_id) REFERENCES public."user"(id)
+);
+
+CREATE OR REPLACE FUNCTION log_document_event()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
+        VALUES (NEW.owner, 'CREATE', 'DOCUMENT', NEW.id, NEW.archive_id, now());
+    ELSIF TG_OP = 'UPDATE' THEN
+        INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
+        VALUES (NEW.last_edit_user, 'UPDATE', 'DOCUMENT', NEW.id, NEW.archive_id, now());
+    ELSIF TG_OP = 'DELETE' THEN
+        INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
+        VALUES (OLD.owner, 'DELETE', 'DOCUMENT', OLD.id, OLD.archive_id, now());
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER document_event_trigger
+AFTER INSERT OR UPDATE OR DELETE ON document
+FOR EACH ROW
+EXECUTE FUNCTION log_document_event();
+
+CREATE OR REPLACE FUNCTION log_archive_event()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
+        VALUES (NEW.owner, 'CREATE', 'ARCHIVE', NEW.id, NEW.id, now());
+    ELSIF TG_OP = 'UPDATE' THEN
+        INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
+        VALUES (NEW.last_edit_user, 'UPDATE', 'ARCHIVE', NEW.id, NEW.id, now());
+    ELSIF TG_OP = 'DELETE' THEN
+        INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
+        VALUES (OLD.owner, 'DELETE', 'ARCHIVE', OLD.id, OLD.id, now());
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER archive_event_trigger
+AFTER INSERT OR UPDATE OR DELETE ON archive
+FOR EACH ROW
+EXECUTE FUNCTION log_archive_event();
+
+CREATE OR REPLACE FUNCTION log_separator_event()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
+        VALUES (NEW.cid, 'CREATE', 'SEPARATOR', NEW.id, NEW.archive_id, now());
+    ELSIF TG_OP = 'UPDATE' THEN
+        INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
+        VALUES (NEW.mid, 'UPDATE', 'SEPARATOR', NEW.id, NEW.archive_id, now());
+    ELSIF TG_OP = 'DELETE' THEN
+        INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
+        VALUES (OLD.cid, 'DELETE', 'SEPARATOR', OLD.id, OLD.archive_id, now());
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER separator_event_trigger
+AFTER INSERT OR UPDATE OR DELETE ON separator
+FOR EACH ROW
+EXECUTE FUNCTION log_separator_event();
 
 

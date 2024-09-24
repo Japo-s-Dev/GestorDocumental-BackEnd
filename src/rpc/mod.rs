@@ -6,9 +6,9 @@ mod rpcs;
 pub use self::error::{Error, Result};
 
 use self::rpcs::{
-	archive_rpc::*, comment_rpc::*, datatype_rpc::*, document_rpc::*, index_rpc::*,
-	project_rpc::*, role_rpc::*, search_operations_rpc::*, separator_rpc::*,
-	user_rpc::*, value_rpc::*,
+	archive_rpc::*, comment_rpc::*, datatype_rpc::*, document_rpc::*, event_rpc::*,
+	index_rpc::*, project_rpc::*, role_rpc::*, search_operations_rpc::*,
+	separator_rpc::*, user_rpc::*, value_rpc::*,
 };
 use crate::core::{ctx::Ctx, model::ModelManager};
 use axum::body::Bytes;
@@ -197,12 +197,18 @@ pub async fn exec_rpc(
 		"get_comment" => exec_rpc_fn!(get_comment, ctx, mm, rpc_params),
 		"list_comments" => exec_rpc_fn!(list_comments, ctx, mm, rpc_params),
 
+		// Event CRUD
+		"list_events" => exec_rpc_fn!(list_events, ctx, mm, rpc_params),
+
 		// Search Operations
 		"get_project_fields" => {
 			exec_rpc_fn!(get_project_fields, ctx, mm, rpc_params)
 		}
 		"get_file_tree" => {
 			exec_rpc_fn!(get_file_tree, ctx, mm, rpc_params)
+		}
+		"get_events_with_filters" => {
+			exec_rpc_fn!(get_events_with_filters, ctx, mm, rpc_params)
 		}
 
 		// -- Fallback error

@@ -77,6 +77,7 @@ pub struct ValueFilter {
 	mtime: Option<OpValsValue>,
 }
 
+#[allow(dead_code)]
 pub trait ValueBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
 impl ValueBy for Value {}
