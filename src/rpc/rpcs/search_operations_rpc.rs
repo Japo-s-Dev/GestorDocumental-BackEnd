@@ -4,27 +4,19 @@ use std::pin::Pin;
 
 use crate::core::ctx::Ctx;
 use crate::core::model::document::{self, Document, DocumentBmc};
-use crate::core::model::index::{IndexBmc, IndexWithDatatype};
+use crate::core::model::event::EventFilter;
+use crate::core::model::index::{IndexBmc, IndexFilter};
+use crate::core::model::search_operations::{
+	EventWithUsername, IndexWithDatatype, SearchBmc,
+};
 use crate::core::model::separator::{Separator, SeparatorBmc};
 use crate::core::model::ModelManager;
-use crate::rpc::params::{self, ParamsIded};
+use crate::rpc::params::{self, ParamsIded, ParamsList};
 use crate::rpc::Result;
 use futures::future::BoxFuture;
 use futures::FutureExt;
 use serde::Serialize;
 use serde_json;
-
-pub async fn get_project_fields(
-	ctx: Ctx,
-	mm: ModelManager,
-	params: ParamsIded,
-) -> Result<Vec<IndexWithDatatype>> {
-	let ParamsIded { id } = params;
-
-	let indexes = IndexBmc::get_indexes_by_project(&ctx, &mm, id).await?;
-
-	Ok(indexes)
-}
 
 #[derive(Serialize)]
 pub struct Node {
@@ -32,6 +24,38 @@ pub struct Node {
 	id: Option<i64>,
 	children: Vec<Node>,
 	documents: Vec<Document>,
+}
+
+pub async fn get_project_fields(
+	ctx: Ctx,
+	mm: ModelManager,
+	params: ParamsList<IndexFilter>,
+) -> Result<Vec<IndexWithDatatype>> {
+	let indexes = SearchBmc::get_indexes_with_filters(
+		&ctx,
+		&mm,
+		params.filters,
+		params.list_options,
+	)
+	.await?;
+
+	Ok(indexes)
+}
+
+pub async fn get_events_with_filters(
+	ctx: Ctx,
+	mm: ModelManager,
+	params: ParamsList<EventFilter>,
+) -> Result<Vec<EventWithUsername>> {
+	let events = SearchBmc::get_events_with_filters(
+		&ctx,
+		&mm,
+		params.filters,
+		params.list_options,
+	)
+	.await?;
+
+	Ok(events)
 }
 
 pub fn build_tree(

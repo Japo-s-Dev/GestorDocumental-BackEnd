@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
-use sqlx::{FromRow, Row};
+use sqlx::FromRow;
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
@@ -43,15 +43,6 @@ pub struct IndexForUpdate {
 	pub datatype_id: i64,
 	pub required: bool,
 	pub index_name: String,
-}
-
-#[derive(FromRow, Debug, Serialize)]
-pub struct IndexWithDatatype {
-	id: i64,
-	project_id: i64,
-	required: bool,
-	index_name: String,
-	datatype_name: String,
 }
 
 #[allow(dead_code)]
@@ -117,35 +108,5 @@ impl IndexBmc {
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
 		base::delete::<Self>(ctx, mm, id).await
-	}
-
-	pub async fn get_indexes_by_project(
-		_ctx: &Ctx,
-		mm: &ModelManager,
-		project_id: i64,
-	) -> Result<Vec<IndexWithDatatype>> {
-		let db = mm.db();
-
-		let rows = sqlx::query(
-            r#"select i.id, i.project_id, i.required, i.index_name, d.datatype_name from public.index i
-            join public.datatype d on i.datatype_id = d.id
-            where i.project_id = $1;"#
-        )
-            .bind(project_id)
-            .fetch_all(db)
-            .await?;
-
-		let indexes = rows
-			.iter()
-			.map(|row| IndexWithDatatype {
-				id: row.get("id"),
-				project_id: row.get("project_id"),
-				required: row.get("required"),
-				index_name: row.get("index_name"),
-				datatype_name: row.get("datatype_name"),
-			})
-			.collect();
-
-		Ok(indexes)
 	}
 }
