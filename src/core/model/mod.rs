@@ -1,20 +1,21 @@
 // region:    --- Modules
 
 pub mod archive;
+pub mod archive_comment;
+pub mod archive_event;
 mod base;
 pub mod bucket;
-pub mod comment;
 pub mod datatype;
 pub mod document;
-mod error;
-pub mod event;
+pub mod document_comment;
+pub mod error;
 pub mod index;
 pub mod modql_utils;
-pub mod project;
 pub mod role;
 pub mod search_operations;
 pub mod separator;
 mod store;
+pub mod structure;
 pub mod user;
 pub mod value;
 

@@ -5,9 +5,7 @@ use crate::core::model::ModelManager;
 use crate::core::model::Result;
 use crate::utils::time::Rfc3339;
 use modql::field::{Fields, HasFields};
-use modql::filter::{
-	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
-};
+use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsValue};
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::postgres::PgRow;
@@ -16,9 +14,11 @@ use sqlx::FromRow;
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
-pub struct Project {
+pub struct DocumentComment {
 	pub id: i64,
-	pub project_name: String,
+	pub document_id: i64,
+	pub text: String,
+	pub user_id: i64,
 	pub cid: i64,
 	#[serde_as(as = "Rfc3339")]
 	pub ctime: OffsetDateTime,
@@ -28,22 +28,33 @@ pub struct Project {
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
-pub struct ProjectForOp {
-	pub project_name: String,
+pub struct DocumentCommentForOp {
+	pub text: String,
+	pub document_id: i64,
+}
+
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct DocumentCommentForOpInsert {
+	pub text: String,
+	pub document_id: i64,
+	pub user_id: i64,
 }
 
 #[allow(dead_code)]
-pub trait ProjectBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
+pub trait DocumentCommentBy:
+	HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send
+{
+}
 
-impl ProjectBy for Project {}
-impl ProjectBy for ProjectForOp {}
-
-pub struct ProjectBmc;
+impl DocumentCommentBy for DocumentComment {}
+impl DocumentCommentBy for DocumentCommentForOp {}
 
 #[derive(FilterNodes, Deserialize, Default, Debug)]
-pub struct ProjectFilter {
+pub struct DocumentCommentFilter {
 	id: Option<OpValsInt64>,
-	project_name: Option<OpValsString>,
+
+	archive_id: Option<OpValsInt64>,
+	user_id: Option<OpValsInt64>,
 	cid: Option<OpValsInt64>,
 	#[modql(to_sea_value_fn = "time_to_sea_value")]
 	ctime: Option<OpValsValue>,
@@ -52,31 +63,43 @@ pub struct ProjectFilter {
 	mtime: Option<OpValsValue>,
 }
 
-impl DbBmc for ProjectBmc {
-	const TABLE: &'static str = "project";
+pub struct DocumentCommentBmc;
+
+impl DbBmc for DocumentCommentBmc {
+	const TABLE: &'static str = "comment";
 }
 
-impl ProjectBmc {
-	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Project> {
+impl DocumentCommentBmc {
+	pub async fn get(
+		ctx: &Ctx,
+		mm: &ModelManager,
+		id: i64,
+	) -> Result<DocumentComment> {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 
 	pub async fn create(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		project_c: ProjectForOp,
+		comment_c: DocumentCommentForOp,
 	) -> Result<i64> {
-		let project_id = base::create::<Self, _>(ctx, mm, project_c).await?;
+		let comment_data = DocumentCommentForOpInsert {
+			document_id: comment_c.document_id,
+			text: comment_c.text,
+			user_id: ctx.user_id(),
+		};
 
-		Ok(project_id)
+		let comment_id = base::create::<Self, _>(ctx, mm, comment_data).await?;
+
+		Ok(comment_id)
 	}
 
 	pub async fn list(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		filters: Option<Vec<ProjectFilter>>,
+		filters: Option<Vec<DocumentCommentFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Project>> {
+	) -> Result<Vec<DocumentComment>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 
@@ -84,9 +107,9 @@ impl ProjectBmc {
 		ctx: &Ctx,
 		mm: &ModelManager,
 		id: i64,
-		project_u: ProjectForOp,
+		comment_u: DocumentCommentForOp,
 	) -> Result<()> {
-		base::update::<Self, _>(ctx, mm, id, project_u).await
+		base::update::<Self, _>(ctx, mm, id, comment_u).await
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {

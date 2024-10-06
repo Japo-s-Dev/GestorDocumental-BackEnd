@@ -6,9 +6,9 @@ mod rpcs;
 pub use self::error::{Error, Result};
 
 use self::rpcs::{
-	archive_rpc::*, comment_rpc::*, datatype_rpc::*, document_rpc::*, event_rpc::*,
-	index_rpc::*, project_rpc::*, role_rpc::*, search_operations_rpc::*,
-	separator_rpc::*, user_rpc::*, value_rpc::*,
+	archive_event_rpc::*, archive_rpc::*, comment_rpc::*, datatype_rpc::*,
+	document_rpc::*, index_rpc::*, role_rpc::*, search_operations_rpc::*,
+	separator_rpc::*, structure_rpc::*, user_rpc::*, value_rpc::*,
 };
 use crate::core::{ctx::Ctx, model::ModelManager};
 use axum::body::Bytes;
@@ -140,11 +140,11 @@ pub async fn exec_rpc(
 		"delete_role" => exec_rpc_fn!(delete_role, ctx, mm, rpc_params),
 
 		// Project CRUD
-		"create_project" => exec_rpc_fn!(create_project, ctx, mm, rpc_params),
-		"list_projects" => exec_rpc_fn!(list_projects, ctx, mm, rpc_params),
-		"get_project" => exec_rpc_fn!(get_project, ctx, mm, rpc_params),
-		"update_project" => exec_rpc_fn!(update_project, ctx, mm, rpc_params),
-		"delete_project" => exec_rpc_fn!(delete_project, ctx, mm, rpc_params),
+		"create_project" => exec_rpc_fn!(create_structure, ctx, mm, rpc_params),
+		"list_projects" => exec_rpc_fn!(list_structures, ctx, mm, rpc_params),
+		"get_project" => exec_rpc_fn!(get_structure, ctx, mm, rpc_params),
+		"update_project" => exec_rpc_fn!(update_structure, ctx, mm, rpc_params),
+		"delete_project" => exec_rpc_fn!(delete_structure, ctx, mm, rpc_params),
 
 		// Datatype CRUD
 		"create_datatype" => exec_rpc_fn!(create_datatype, ctx, mm, rpc_params),
@@ -209,6 +209,9 @@ pub async fn exec_rpc(
 		}
 		"get_events_with_filters" => {
 			exec_rpc_fn!(get_events_with_filters, ctx, mm, rpc_params)
+		}
+		"search_archives" => {
+			exec_rpc_fn!(search_archives, ctx, mm, rpc_params)
 		}
 
 		// -- Fallback error

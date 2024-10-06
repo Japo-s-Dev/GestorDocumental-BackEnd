@@ -1,20 +1,20 @@
 use crate::core::ctx::Ctx;
-use crate::core::model::comment::{
-	Comment, CommentBmc, CommentFilter, CommentForOp,
+use crate::core::model::archive_comment::{
+	ArchiveComment, ArchiveCommentBmc, ArchiveCommentFilter, ArchiveCommentForOp,
 };
 use crate::core::model::ModelManager;
-use crate::rpc::params::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
+use crate::rpc::params::{ParamsForCreate, ParamsIded, ParamsList};
 use crate::rpc::Result;
 
 pub async fn create_comment(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsForCreate<CommentForOp>,
-) -> Result<Comment> {
+	params: ParamsForCreate<ArchiveCommentForOp>,
+) -> Result<ArchiveComment> {
 	let ParamsForCreate { data } = params;
 
-	let id = CommentBmc::create(&ctx, &mm, data).await?;
-	let comment = CommentBmc::get(&ctx, &mm, id).await?;
+	let id = ArchiveCommentBmc::create(&ctx, &mm, data).await?;
+	let comment = ArchiveCommentBmc::get(&ctx, &mm, id).await?;
 
 	Ok(comment)
 }
@@ -22,22 +22,23 @@ pub async fn create_comment(
 pub async fn list_comments(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsList<CommentFilter>,
-) -> Result<Vec<Comment>> {
-	let archives =
-		CommentBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
+	params: ParamsList<ArchiveCommentFilter>,
+) -> Result<Vec<ArchiveComment>> {
+	let comments =
+		ArchiveCommentBmc::list(&ctx, &mm, params.filters, params.list_options)
+			.await?;
 
-	Ok(archives)
+	Ok(comments)
 }
 
 pub async fn get_comment(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsIded,
-) -> Result<Comment> {
+) -> Result<ArchiveComment> {
 	let ParamsIded { id } = params;
 
-	let archive = CommentBmc::get(&ctx, &mm, id).await?;
+	let comment = ArchiveCommentBmc::get(&ctx, &mm, id).await?;
 
-	Ok(archive)
+	Ok(comment)
 }
