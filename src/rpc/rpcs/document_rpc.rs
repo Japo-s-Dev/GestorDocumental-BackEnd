@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::core::ctx::Ctx;
 use crate::core::model::document::{
 	Document, DocumentBmc, DocumentFilter, DocumentForCreate, DocumentForRequest,
@@ -9,6 +11,7 @@ use crate::rpc::config::rpc_config;
 use crate::rpc::params::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
 use crate::rpc::File;
 use crate::rpc::Result;
+use aws_sdk_s3::presigning::PresigningConfig;
 use aws_sdk_s3::{primitives::ByteStream, Client};
 
 pub async fn create_document(
@@ -33,7 +36,7 @@ pub async fn create_document(
 			file.file_name.clone()
 		},
 		doc_type: file.content_type.clone(),
-		url: file.url.clone(),
+		key: file.key.clone(),
 	};
 
 	let document_id = DocumentBmc::create(&ctx, &mm, final_data).await?;
@@ -83,7 +86,7 @@ pub async fn update_document(
 		separator_id: data.separator_id,
 		name: document.name,
 		doc_type: document.doc_type,
-		url: document.url,
+		key: document.key,
 	};
 
 	if let Some(mut file) = file {
@@ -91,7 +94,7 @@ pub async fn update_document(
 
 		new_data.name = file.file_name.clone();
 		new_data.doc_type = file.content_type.clone();
-		new_data.url = file.url.clone();
+		new_data.key = file.key.clone();
 	}
 
 	DocumentBmc::update(&ctx, &mm, id, new_data).await?;
@@ -112,6 +115,43 @@ pub async fn delete_document(
 	DocumentBmc::delete(&ctx, &mm, id).await?;
 
 	Ok(document)
+}
+
+pub async fn get_doc_url(
+	ctx: Ctx,
+	mm: ModelManager,
+	params: ParamsIded,
+) -> Result<String> {
+	let ParamsIded { id } = params;
+
+	let document = DocumentBmc::get(&ctx, &mm, id).await?;
+
+	let presigned_url = generate_presigned_url(&mm.bucket, &document.key).await?;
+
+	Ok(presigned_url)
+}
+
+async fn generate_presigned_url(s3_client: &Client, key: &str) -> Result<String> {
+	let expiration = Duration::from_secs(900)
+		.try_into()
+		.unwrap_or(Duration::from_secs(900));
+
+	let presign_config = PresigningConfig::builder()
+		.expires_in(expiration)
+		.build()
+		.unwrap();
+
+	// Build the GetObject request
+	let get_object_req = s3_client
+		.get_object()
+		.bucket(&rpc_config().AWS_BUCKET_NAME)
+		.key(key)
+		.presigned(presign_config)
+		.await?;
+
+	let presigned_url = get_object_req.uri().to_string();
+
+	Ok(presigned_url)
 }
 
 async fn upload_to_s3(s3_client: &Client, file: &File) -> Result<()> {

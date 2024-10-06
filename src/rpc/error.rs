@@ -1,8 +1,9 @@
 use crate::core::model;
+use aws_sdk_s3::error::SdkError;
+use aws_sdk_s3::operation::get_object::GetObjectError;
 use derive_more::From;
 use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
-
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[serde_as]
@@ -30,12 +31,12 @@ pub enum Error {
 	#[from]
 	Model(model::Error),
 
-	S3Error,
-	SdkError(String),
-
 	// -- External Modules
 	#[from]
 	SerdeJson(#[serde_as(as = "DisplayFromStr")] serde_json::Error),
+
+	#[from]
+	S3GetObjectError(#[serde_as(as = "DisplayFromStr")] SdkError<GetObjectError>),
 }
 
 // region:    --- Error Boilerplate

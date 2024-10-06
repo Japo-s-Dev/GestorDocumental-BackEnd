@@ -26,7 +26,7 @@ pub struct Document {
 	pub doc_type: String,
 	pub owner: i64,
 	pub last_edit_user: i64,
-	pub url: String,
+	pub key: String,
 	pub cid: i64,
 	#[serde_as(as = "Rfc3339")]
 	pub ctime: OffsetDateTime,
@@ -47,7 +47,7 @@ pub struct DocumentForCreate {
 	pub archive_id: i64,
 	pub name: String,
 	pub doc_type: String,
-	pub url: String,
+	pub key: String,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Deserialize)]
@@ -56,7 +56,7 @@ pub struct DocumentForUpdate {
 	pub separator_id: i64,
 	pub name: String,
 	pub doc_type: String,
-	pub url: String,
+	pub key: String,
 }
 
 #[serde_as]
@@ -68,7 +68,7 @@ pub struct DocumentForCreateInsert {
 	pub doc_type: String,
 	pub owner: i64,
 	pub last_edit_user: i64,
-	pub url: String,
+	pub key: String,
 }
 
 #[serde_as]
@@ -78,7 +78,7 @@ pub struct DocumentForUpdateInsert {
 	pub last_edit_user: i64,
 	pub separator_id: i64,
 	pub archive_id: i64,
-	pub url: String,
+	pub key: String,
 	pub doc_type: String,
 }
 
@@ -137,7 +137,7 @@ impl DocumentBmc {
 			doc_type: document_c.doc_type,
 			owner: ctx.user_id(),
 			last_edit_user: ctx.user_id(),
-			url: document_c.url,
+			key: document_c.key,
 		};
 
 		let document_id = base::create::<Self, _>(ctx, mm, document).await?;
@@ -165,7 +165,7 @@ impl DocumentBmc {
 			last_edit_user: ctx.user_id(),
 			archive_id: document_u.archive_id,
 			separator_id: document_u.separator_id,
-			url: document_u.url,
+			key: document_u.key,
 			doc_type: document_u.doc_type,
 		};
 

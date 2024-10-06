@@ -26,7 +26,6 @@ pub struct RpcRequest {
 pub struct File {
 	pub key: String,
 	pub successful: bool,
-	pub url: String,
 	pub file_name: String,
 	pub content_type: String,
 	#[serde(skip_serializing)]
@@ -140,11 +139,11 @@ pub async fn exec_rpc(
 		"delete_role" => exec_rpc_fn!(delete_role, ctx, mm, rpc_params),
 
 		// Project CRUD
-		"create_project" => exec_rpc_fn!(create_structure, ctx, mm, rpc_params),
-		"list_projects" => exec_rpc_fn!(list_structures, ctx, mm, rpc_params),
-		"get_project" => exec_rpc_fn!(get_structure, ctx, mm, rpc_params),
-		"update_project" => exec_rpc_fn!(update_structure, ctx, mm, rpc_params),
-		"delete_project" => exec_rpc_fn!(delete_structure, ctx, mm, rpc_params),
+		"create_structure" => exec_rpc_fn!(create_structure, ctx, mm, rpc_params),
+		"list_structures" => exec_rpc_fn!(list_structures, ctx, mm, rpc_params),
+		"get_structure" => exec_rpc_fn!(get_structure, ctx, mm, rpc_params),
+		"update_structure" => exec_rpc_fn!(update_structure, ctx, mm, rpc_params),
+		"delete_structure" => exec_rpc_fn!(delete_structure, ctx, mm, rpc_params),
 
 		// Datatype CRUD
 		"create_datatype" => exec_rpc_fn!(create_datatype, ctx, mm, rpc_params),
@@ -212,6 +211,9 @@ pub async fn exec_rpc(
 		}
 		"search_archives" => {
 			exec_rpc_fn!(search_archives, ctx, mm, rpc_params)
+		}
+		"get_doc_url" => {
+			exec_rpc_fn!(get_doc_url, ctx, mm, rpc_params)
 		}
 
 		// -- Fallback error
