@@ -3,11 +3,12 @@ use std::future::Future;
 use std::pin::Pin;
 
 use crate::core::ctx::Ctx;
+use crate::core::model::archive::Archive;
+use crate::core::model::archive_event::ArchiveEventFilter;
 use crate::core::model::document::{self, Document, DocumentBmc};
-use crate::core::model::event::EventFilter;
 use crate::core::model::index::{IndexBmc, IndexFilter};
 use crate::core::model::search_operations::{
-	EventWithUsername, IndexWithDatatype, SearchBmc,
+	ArchiveIndexFilter, EventWithUsername, IndexWithDatatype, SearchBmc,
 };
 use crate::core::model::separator::{Separator, SeparatorBmc};
 use crate::core::model::ModelManager;
@@ -24,6 +25,7 @@ pub struct Node {
 	id: Option<i64>,
 	children: Vec<Node>,
 	documents: Vec<Document>,
+	r#type: String,
 }
 
 pub async fn get_project_fields(
@@ -42,10 +44,22 @@ pub async fn get_project_fields(
 	Ok(indexes)
 }
 
+pub async fn search_archives(
+	ctx: Ctx,
+	mm: ModelManager,
+	params: ParamsList<ArchiveIndexFilter>,
+) -> Result<Vec<Archive>> {
+	let archives =
+		SearchBmc::search_archives(&ctx, &mm, params.filters, params.list_options)
+			.await?;
+
+	Ok(archives)
+}
+
 pub async fn get_events_with_filters(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsList<EventFilter>,
+	params: ParamsList<ArchiveEventFilter>,
 ) -> Result<Vec<EventWithUsername>> {
 	let events = SearchBmc::get_events_with_filters(
 		&ctx,
@@ -95,6 +109,7 @@ pub fn build_tree(
 			name: parent_name,
 			children: children_nodes,
 			documents: document_nodes,
+			r#type: "folder".to_string(),
 		})
 	}
 	.boxed()

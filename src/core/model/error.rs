@@ -23,6 +23,12 @@ pub enum Error {
 		entity: &'static str,
 		id: String,
 	},
+
+	UnknownDatatype(String),
+	UnknownIndexId(i64),
+	InvalidValue(String),
+	UnsupportedOperator(String),
+
 	// -- Modules
 	#[from]
 	Pwd(pwd::Error),

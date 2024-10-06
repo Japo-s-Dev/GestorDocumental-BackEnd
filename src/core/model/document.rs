@@ -38,6 +38,7 @@ pub struct Document {
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct DocumentForRequest {
 	pub separator_id: i64,
+	pub name: Option<String>,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
@@ -110,7 +111,6 @@ pub struct DocumentFilter {
 
 #[derive(Iden)]
 enum DocumentIden {
-	Id,
 	ArchiveId,
 }
 

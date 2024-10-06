@@ -27,6 +27,11 @@ use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+	/*let _guard = sentry::init(("https://64bf508f23953f692ba2892a4e406668@o4508014761213952.ingest.us.sentry.io/4508014764228608", sentry::ClientOptions {
+		release: sentry::release_name!(),
+		..Default::default()
+	}));
+	*/
 	tracing_subscriber::fmt()
 		.with_target(false)
 		.with_env_filter(EnvFilter::from_default_env())
@@ -36,14 +41,13 @@ async fn main() -> Result<()> {
 	// _dev_utils::init_dev().await;
 
 	let origins = [
-		"http://52.204.86.10".parse::<HeaderValue>().unwrap(),
-		"http://190.56.194.12:3400".parse::<HeaderValue>().unwrap(),
 		"http://localhost:3400".parse::<HeaderValue>().unwrap(),
 		"http://localhost:4200".parse::<HeaderValue>().unwrap(),
-		"https://52.204.86.10".parse::<HeaderValue>().unwrap(),
-		"https://190.56.194.12:3400".parse::<HeaderValue>().unwrap(),
 		"https://localhost:3400".parse::<HeaderValue>().unwrap(),
 		"https://localhost:4200".parse::<HeaderValue>().unwrap(),
+		"https://fastfile.evoluciona.com.gt"
+			.parse::<HeaderValue>()
+			.unwrap(),
 	];
 
 	// Set up cors
