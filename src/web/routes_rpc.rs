@@ -54,17 +54,10 @@ async fn rpc_handler(
 
 			let file_name = format!("{}-{}", key, name);
 
-			let url = format!(
-				"https://{}.s3.amazonaws.com/{}",
-				&web_config().AWS_BUCKET_NAME,
-				key
-			);
-
 			file_data = Some(File {
 				file_name,
 				content_type,
 				key,
-				url,
 				bytes,
 				successful: false,
 			})

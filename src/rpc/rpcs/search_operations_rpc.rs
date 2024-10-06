@@ -1,23 +1,20 @@
 use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
 
 use crate::core::ctx::Ctx;
 use crate::core::model::archive::Archive;
 use crate::core::model::archive_event::ArchiveEventFilter;
-use crate::core::model::document::{self, Document, DocumentBmc};
-use crate::core::model::index::{IndexBmc, IndexFilter};
+use crate::core::model::document::{Document, DocumentBmc};
+use crate::core::model::index::IndexFilter;
 use crate::core::model::search_operations::{
 	ArchiveIndexFilter, EventWithUsername, IndexWithDatatype, SearchBmc,
 };
 use crate::core::model::separator::{Separator, SeparatorBmc};
 use crate::core::model::ModelManager;
-use crate::rpc::params::{self, ParamsIded, ParamsList};
+use crate::rpc::params::{ParamsIded, ParamsList};
 use crate::rpc::Result;
 use futures::future::BoxFuture;
 use futures::FutureExt;
 use serde::Serialize;
-use serde_json;
 
 #[derive(Serialize)]
 pub struct Node {

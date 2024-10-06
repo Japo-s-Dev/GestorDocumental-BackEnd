@@ -18,7 +18,7 @@ use sqlx::FromRow;
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Archive {
 	pub id: i64,
-	pub project_id: i64,
+	pub structure_id: i64,
 	pub owner: i64,
 	pub last_edit_user: i64,
 	pub tag: String,
@@ -32,7 +32,7 @@ pub struct Archive {
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct ArchiveForCreate {
-	pub project_id: i64,
+	pub structure_id: i64,
 	pub tag: String,
 }
 
@@ -44,7 +44,7 @@ pub struct ArchiveForUpdate {
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct ArchiveForInsertCreate {
-	pub project_id: i64,
+	pub structure_id: i64,
 	pub owner: i64,
 	pub last_edit_user: i64,
 	pub tag: String,
@@ -61,7 +61,7 @@ pub struct ArchiveForInsertUpdate {
 pub struct ArchiveFilter {
 	id: Option<OpValsInt64>,
 
-	project_id: Option<OpValsInt64>,
+	structure_id: Option<OpValsInt64>,
 	owner: Option<OpValsInt64>,
 	last_edit_user: Option<OpValsInt64>,
 	tag: Option<OpValsString>,
@@ -100,7 +100,7 @@ impl ArchiveBmc {
 	) -> Result<i64> {
 		let archive_insert = ArchiveForInsertCreate {
 			owner: ctx.user_id(),
-			project_id: archive_op.project_id,
+			structure_id: archive_op.structure_id,
 			last_edit_user: ctx.user_id(),
 			tag: archive_op.tag,
 		};
