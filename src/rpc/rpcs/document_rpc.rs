@@ -27,7 +27,11 @@ pub async fn create_document(
 	let final_data = DocumentForCreate {
 		archive_id: separator.archive_id,
 		separator_id: data.separator_id,
-		name: file.file_name.clone(),
+		name: if let Some(file_name) = data.name {
+			file_name
+		} else {
+			file.file_name.clone()
+		},
 		doc_type: file.content_type.clone(),
 		url: file.url.clone(),
 	};

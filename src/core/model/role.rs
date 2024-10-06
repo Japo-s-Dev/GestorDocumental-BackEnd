@@ -8,8 +8,6 @@ use modql::field::{Fields, HasFields};
 use modql::filter::{
 	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
 };
-use sea_query::{Expr, Iden, PostgresQueryBuilder, Query};
-use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::postgres::PgRow;
@@ -42,11 +40,6 @@ pub trait RoleBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 impl RoleBy for Role {}
 impl RoleBy for RoleForOp {}
 
-#[derive(Iden)]
-enum RoleIden {
-	RoleName,
-}
-
 pub struct RoleBmc;
 
 #[derive(FilterNodes, Deserialize, Default, Debug)]
@@ -69,30 +62,6 @@ impl DbBmc for RoleBmc {
 impl RoleBmc {
 	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Role> {
 		base::get::<Self, _>(ctx, mm, id).await
-	}
-
-	pub async fn first_by_role_name<E>(
-		_ctx: &Ctx,
-		mm: &ModelManager,
-		role_name: &str,
-	) -> Result<Option<E>>
-	where
-		E: RoleBy,
-	{
-		let db = mm.db();
-
-		let mut query = Query::select();
-		query
-			.from(Self::table_ref())
-			.columns(E::field_idens())
-			.and_where(Expr::col(RoleIden::RoleName).eq(role_name));
-
-		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
-		let role = sqlx::query_as_with::<_, E, _>(&sql, values)
-			.fetch_optional(db)
-			.await?;
-
-		Ok(role)
 	}
 
 	pub async fn create(
