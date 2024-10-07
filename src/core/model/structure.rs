@@ -18,7 +18,7 @@ use sqlx::FromRow;
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Structure {
 	pub id: i64,
-	pub structure_name: String,
+	pub project_name: String,
 	pub cid: i64,
 	#[serde_as(as = "Rfc3339")]
 	pub ctime: OffsetDateTime,
@@ -29,7 +29,7 @@ pub struct Structure {
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct StructureForOp {
-	pub structure_name: String,
+	pub project_name: String,
 }
 
 #[allow(dead_code)]
@@ -46,7 +46,7 @@ pub struct StructureBmc;
 #[derive(FilterNodes, Deserialize, Default, Debug)]
 pub struct StructureFilter {
 	id: Option<OpValsInt64>,
-	structure_name: Option<OpValsString>,
+	project_name: Option<OpValsString>,
 	cid: Option<OpValsInt64>,
 	#[modql(to_sea_value_fn = "time_to_sea_value")]
 	ctime: Option<OpValsValue>,

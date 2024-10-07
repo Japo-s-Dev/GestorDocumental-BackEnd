@@ -63,13 +63,8 @@ async fn main() -> Result<()> {
 	let routes_rpc = routes_rpc::routes(mm.clone())
 		.route_layer(middleware::from_fn(mw_ctx_require));
 
-	//	let routes_hello = Router::new()
-	//		.route("/hello", get(|| async { Html("Hello World") }))
-	//		.route_layer(middleware::from_fn(mw_ctx_require));
-
 	let routes_all = Router::new()
 		.merge(routes_login::routes(mm.clone()))
-		//		.merge(routes_hello)
 		.nest("/api", routes_rpc)
 		.layer(middleware::map_response(mw_reponse_map))
 		.layer(cors.clone())
