@@ -19,7 +19,7 @@ use sqlx::FromRow;
 pub struct Index {
 	pub id: i64,
 	pub datatype_id: i64,
-	pub structure_id: i64,
+	pub project_id: i64,
 	pub required: bool,
 	pub index_name: String,
 	pub cid: i64,
@@ -33,7 +33,7 @@ pub struct Index {
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct IndexForCreate {
 	pub datatype_id: i64,
-	pub structure_id: i64,
+	pub project_id: i64,
 	pub required: bool,
 	pub index_name: String,
 }
@@ -56,7 +56,7 @@ impl IndexBy for IndexForUpdate {}
 pub struct IndexFilter {
 	id: Option<OpValsInt64>,
 	datatype_id: Option<OpValsInt64>,
-	structure_id: Option<OpValsInt64>,
+	project_id: Option<OpValsInt64>,
 	required: Option<OpValsBool>,
 	index_name: Option<OpValsString>,
 	cid: Option<OpValsInt64>,
