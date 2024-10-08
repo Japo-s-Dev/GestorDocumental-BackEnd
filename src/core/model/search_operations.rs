@@ -15,6 +15,7 @@ use serde_with::serde_as;
 use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::{FromRow, Row};
+use tracing::debug;
 
 use super::archive::Archive;
 use super::base::compute_list_options;
@@ -290,29 +291,61 @@ impl SearchBmc {
 						Expr::col((alias.clone(), ValueIden::IndexId)).eq(index_id),
 					);
 
+				// Variables to hold Gte, Lte, and Eq conditions for the same index
+				let mut gte_value: Option<String> = None;
+				let mut lte_value: Option<String> = None;
+				let mut eq_value: Option<String> = None;
+
+				// Process each filter in the group
 				for filter in filter_group {
-					let expr = Expr::col((alias.clone(), ValueIden::Value));
 					match filter.operator.as_str() {
-						"Eq" => {
-							on_condition =
-								on_condition.add(expr.eq(filter.value.clone()));
-						}
 						"Gte" => {
-							on_condition =
-								on_condition.add(expr.gte(filter.value.clone()));
+							gte_value = Some(filter.value.clone());
 						}
 						"Lte" => {
-							on_condition =
-								on_condition.add(expr.lte(filter.value.clone()));
+							lte_value = Some(filter.value.clone());
+						}
+						"Eq" => {
+							eq_value = Some(filter.value.clone());
 						}
 						_ => {
 							return Err(Error::UnsupportedOperator(
-								(&filter.operator.as_str()).to_string(),
+								filter.operator.clone(),
 							));
 						}
 					}
 				}
 
+				// Apply Eq condition if it exists (precedence over Gte and Lte)
+				if let Some(eq) = &eq_value {
+					on_condition = on_condition.add(
+						Expr::col((alias.clone(), ValueIden::Value)).eq(eq.clone()),
+					);
+				}
+				// Apply BETWEEN if both Gte and Lte exist
+				else if let (Some(gte), Some(lte)) = (&gte_value, &lte_value) {
+					on_condition = on_condition.add(
+						Expr::col((alias.clone(), ValueIden::Value))
+							.between(gte.clone(), lte.clone()),
+					);
+				}
+				// Apply Gte or Lte individually if only one exists
+				else {
+					if let Some(gte) = &gte_value {
+						on_condition = on_condition.add(
+							Expr::col((alias.clone(), ValueIden::Value))
+								.gte(gte.clone()),
+						);
+					}
+					if let Some(lte) = &lte_value {
+						on_condition = on_condition.add(
+							Expr::col((alias.clone(), ValueIden::Value))
+								.lte(lte.clone()),
+						);
+					}
+				}
+
+				// Join the alias table based on the conditions
 				query.join_as(
 					JoinType::InnerJoin,
 					ValueIden::Table,
@@ -322,13 +355,14 @@ impl SearchBmc {
 			}
 		}
 
+		// Apply list options like sorting and limits
 		let list_options = compute_list_options(list_options)?;
 		list_options.apply_to_sea_query(&mut query);
 
 		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
 
 		// Optionally, print the generated SQL for debugging
-		println!("Generated SQL: {}", sql);
+		debug!("Generated SQL: {}", sql);
 
 		let archives = sqlx::query_as_with::<_, Archive, _>(&sql, values)
 			.fetch_all(db)
