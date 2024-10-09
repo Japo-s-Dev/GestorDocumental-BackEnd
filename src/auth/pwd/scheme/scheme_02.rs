@@ -47,24 +47,50 @@ fn get_argon2() -> &'static Argon2<'static> {
 // region:    --- Tests
 #[cfg(test)]
 mod tests {
-	use super::*;
-	use crate::auth::pwd::ContentToHash;
-	use anyhow::Result;
-	use uuid::Uuid;
-	#[test]
-	fn test_scheme_02_hash_into_b64u_ok() -> Result<()> {
-		// -- Setup & Fixtures
-		let fx_to_hash = ContentToHash {
-			content: "hello world".to_string(),
-			salt: Uuid::parse_str("f05e8961-d6ad-4086-9e78-a6de065e5453")?,
-		};
-		let fx_res = "$argon2id$v=19$m=19456,t=2,p=1$8F6JYdatQIaeeKbeBl5UUw$TaRnmmbDdQ1aTzk2qQ2yQzPQoZfnKqhrfuTH/TRP5V4";
-		// -- Exec
-		let scheme = Scheme02;
-		let res = scheme.hash(&fx_to_hash)?;
-		// -- Check
-		assert_eq!(res, fx_res);
-		Ok(())
-	}
+    use super::*;
+    use crate::auth::pwd::ContentToHash;
+    use anyhow::Result;
+    use uuid::Uuid;
+
+
+    #[test]
+    fn test_scheme_02_hash_into_b64u_ok() -> Result<()> {
+        // -- Setup & Fixtures
+        let fx_to_hash = ContentToHash {
+            content: "hello world".to_string(),
+            salt: Uuid::parse_str("f05e8961-d6ad-4086-9e78-a6de065e5453")?,
+        };
+
+        // This is the expected Argon2 hash result
+        let fx_res = "$argon2id$v=19$m=19456,t=2,p=1$8F6JYdatQIaeeKbeBl5UUw$TaRnmmbDdQ1aTzk2qQ2yQzPQoZfnKqhrfuTH/TRP5V4";
+
+        // -- Exec
+        let scheme = Scheme02;
+        let res = scheme.hash(&fx_to_hash)?;
+
+        // -- Check
+        assert_eq!(res, fx_res);
+        Ok(())
+    }
+
+    #[test]
+    fn test_scheme_02_validate_correct_password() -> Result<()> {
+        // -- Setup
+        let fx_to_hash = ContentToHash {
+            content: "password123".to_string(),
+            salt: Uuid::parse_str("f05e8961-d6ad-4086-9e78-a6de065e5453")?,
+        };
+
+        // The password reference is the correct hash
+        let fx_pwd_ref = "$argon2id$v=19$m=19456,t=2,p=1$8F6JYdatQIaeeKbeBl5UUw$TaRnmmbDdQ1aTzk2qQ2yQzPQoZfnKqhrfuTH/TRP5V4";
+
+        let scheme = Scheme02;
+
+        // -- Validate it
+        let result = scheme.validate(&fx_to_hash, fx_pwd_ref);
+
+        // -- Check if validation passes
+        assert!(result.is_ok());
+        Ok(())
+    }
 }
-// endregion: --- Tests
