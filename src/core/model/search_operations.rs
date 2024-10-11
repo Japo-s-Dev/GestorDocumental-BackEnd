@@ -15,6 +15,7 @@ use serde_with::serde_as;
 use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::{FromRow, Row};
+use tracing::debug;
 
 use super::archive::Archive;
 use super::base::compute_list_options;
@@ -246,7 +247,6 @@ impl SearchBmc {
 		list_options: Option<ListOptions>,
 	) -> Result<Vec<Archive>> {
 		let db = mm.db();
-
 		let mut query = Query::select();
 		query
 			.columns([
@@ -278,8 +278,14 @@ impl SearchBmc {
 
 			let mut index = 0;
 			for (index_id, filter_group) in filters_by_index {
-				let alias = Alias::new(&format!("v{}", index));
+				let alias = Alias::new(&format!("v{}", index)); // Generates dynamic aliases v0, v1, etc.
 				index += 1;
+
+				// Select the value column from each dynamically created alias
+				query.expr_as(
+					Expr::col((alias.clone(), ValueIden::Value)),
+					Alias::new(&format!("v{}_value", index_id)),
+				);
 
 				let mut on_condition = Condition::all()
 					.add(
@@ -290,29 +296,61 @@ impl SearchBmc {
 						Expr::col((alias.clone(), ValueIden::IndexId)).eq(index_id),
 					);
 
+				// Variables to hold Gte, Lte, and Eq conditions for the same index
+				let mut gte_value: Option<String> = None;
+				let mut lte_value: Option<String> = None;
+				let mut eq_value: Option<String> = None;
+
+				// Process each filter in the group
 				for filter in filter_group {
-					let expr = Expr::col((alias.clone(), ValueIden::Value));
 					match filter.operator.as_str() {
-						"Eq" => {
-							on_condition =
-								on_condition.add(expr.eq(filter.value.clone()));
-						}
 						"Gte" => {
-							on_condition =
-								on_condition.add(expr.gte(filter.value.clone()));
+							gte_value = Some(filter.value.clone());
 						}
 						"Lte" => {
-							on_condition =
-								on_condition.add(expr.lte(filter.value.clone()));
+							lte_value = Some(filter.value.clone());
+						}
+						"Eq" => {
+							eq_value = Some(filter.value.clone());
 						}
 						_ => {
 							return Err(Error::UnsupportedOperator(
-								(&filter.operator.as_str()).to_string(),
+								filter.operator.clone(),
 							));
 						}
 					}
 				}
 
+				// Apply Eq condition if it exists (precedence over Gte and Lte)
+				if let Some(eq) = &eq_value {
+					on_condition = on_condition.add(
+						Expr::col((alias.clone(), ValueIden::Value)).eq(eq.clone()),
+					);
+				}
+				// Apply BETWEEN if both Gte and Lte exist
+				else if let (Some(gte), Some(lte)) = (&gte_value, &lte_value) {
+					on_condition = on_condition.add(
+						Expr::col((alias.clone(), ValueIden::Value))
+							.between(gte.clone(), lte.clone()),
+					);
+				}
+				// Apply Gte or Lte individually if only one exists
+				else {
+					if let Some(gte) = &gte_value {
+						on_condition = on_condition.add(
+							Expr::col((alias.clone(), ValueIden::Value))
+								.gte(gte.clone()),
+						);
+					}
+					if let Some(lte) = &lte_value {
+						on_condition = on_condition.add(
+							Expr::col((alias.clone(), ValueIden::Value))
+								.lte(lte.clone()),
+						);
+					}
+				}
+
+				// Join the alias table based on the conditions
 				query.join_as(
 					JoinType::InnerJoin,
 					ValueIden::Table,
@@ -322,13 +360,14 @@ impl SearchBmc {
 			}
 		}
 
+		// Apply list options like sorting and limits
 		let list_options = compute_list_options(list_options)?;
 		list_options.apply_to_sea_query(&mut query);
 
 		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
 
 		// Optionally, print the generated SQL for debugging
-		println!("Generated SQL: {}", sql);
+		debug!("Generated SQL: {}", sql);
 
 		let archives = sqlx::query_as_with::<_, Archive, _>(&sql, values)
 			.fetch_all(db)
@@ -336,64 +375,4 @@ impl SearchBmc {
 
 		Ok(archives)
 	}
-
-	/*
-	pub async fn search_archives<F>(
-		_ctx: &Ctx,
-		mm: &ModelManager,
-		filters: Option<F>,
-		list_options: Option<ListOptions>,
-	) -> Result<Vec<Archive>>
-	where
-		F: Into<FilterGroups>,
-	{
-		if let Some(filters) = filters {
-			let filter_groups: FilterGroups = filters.into();
-			// Print the entire filter groups for inspection
-			//
-			let condition: Condition = filter_groups.try_into()?;
-			dbg!(condition);
-		}
-
-		todo!()
-		let db = mm.db();
-
-		let mut query = Query::select();
-		query
-			.columns([
-				(ArchiveIden::Table, ArchiveIden::Id),
-				(ArchiveIden::Table, ArchiveIden::ProjectId),
-				(ArchiveIden::Table, ArchiveIden::Owner),
-				(ArchiveIden::Table, ArchiveIden::LastEditUser),
-				(ArchiveIden::Table, ArchiveIden::Tag),
-				(ArchiveIden::Table, ArchiveIden::Cid),
-				(ArchiveIden::Table, ArchiveIden::Ctime),
-				(ArchiveIden::Table, ArchiveIden::Mid),
-				(ArchiveIden::Table, ArchiveIden::Mtime),
-			])
-			.from(ArchiveIden::Table)
-			.inner_join(
-				ValueIden::Table,
-				Expr::col((ArchiveIden::Table, ArchiveIden::Id))
-					.equals((ValueIden::Table, ValueIden::ArchiveId)),
-			);
-
-		if let Some(filters) = filters {
-			let filter_groups: FilterGroups = filters.into();
-			let condition: Condition = filter_groups.try_into()?;
-			query.cond_where(condition);
-		}
-
-		let list_options = compute_list_options(list_options)?;
-		list_options.apply_to_sea_query(&mut query);
-
-		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
-
-		let archives = sqlx::query_as_with::<_, Archive, _>(&sql, values)
-			.fetch_all(db)
-			.await?;
-
-		Ok(archives)
-	}
-	*/
 }

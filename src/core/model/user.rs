@@ -70,6 +70,7 @@ pub struct UserForLogin {
 pub struct UserForAuth {
 	pub id: i64,
 	pub username: String,
+	pub assigned_role: String,
 
 	// -- token info
 	pub token_salt: Uuid,

@@ -13,7 +13,7 @@ DROP TABLE IF EXISTS public.assosiated_privilege;
 DROP TABLE IF EXISTS public.role;
 DROP TABLE IF EXISTS public.index cascade;
 DROP TABLE IF EXISTS public.privilege;
-DROP TABLE IF EXISTS public.project;
+DROP TABLE IF EXISTS public.structure;
 DROP TABLE IF EXISTS public.datatype cascade;
 
 CREATE TABLE IF NOT EXISTS
@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS
         mid bigint NOT NULL,
         mtime timestamp with time zone NOT NULL  default now(),
         PRIMARY KEY (id_log, user_id),
-        FOREIGN KEY (id_log) REFERENCES log_session (id),
+        FOREIGN KEY (id_log) REFERENCES log_session (id),aur/notion-app-electron
         FOREIGN KEY (user_id) REFERENCES "user" (id)
     );
 
@@ -290,7 +290,7 @@ BEGIN
         INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
         VALUES (NEW.cid, 'CREATE', 'SEPARATOR', NEW.id, NEW.archive_id, now());
     ELSIF TG_OP = 'UPDATE' THEN
-        INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
+        INSERT INTO event (user_id, action, object, object_id,aur/notion-app-electron archive_id, timestamp)
         VALUES (NEW.mid, 'UPDATE', 'SEPARATOR', NEW.id, NEW.archive_id, now());
     ELSIF TG_OP = 'DELETE' THEN
         INSERT INTO event (user_id, action, object, object_id, archive_id, timestamp)
