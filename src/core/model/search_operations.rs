@@ -247,7 +247,6 @@ impl SearchBmc {
 		list_options: Option<ListOptions>,
 	) -> Result<Vec<Archive>> {
 		let db = mm.db();
-
 		let mut query = Query::select();
 		query
 			.columns([
@@ -279,8 +278,14 @@ impl SearchBmc {
 
 			let mut index = 0;
 			for (index_id, filter_group) in filters_by_index {
-				let alias = Alias::new(&format!("v{}", index));
+				let alias = Alias::new(&format!("v{}", index)); // Generates dynamic aliases v0, v1, etc.
 				index += 1;
+
+				// Select the value column from each dynamically created alias
+				query.expr_as(
+					Expr::col((alias.clone(), ValueIden::Value)),
+					Alias::new(&format!("v{}_value", index_id)),
+				);
 
 				let mut on_condition = Condition::all()
 					.add(
@@ -370,64 +375,4 @@ impl SearchBmc {
 
 		Ok(archives)
 	}
-
-	/*
-	pub async fn search_archives<F>(
-		_ctx: &Ctx,
-		mm: &ModelManager,
-		filters: Option<F>,
-		list_options: Option<ListOptions>,
-	) -> Result<Vec<Archive>>
-	where
-		F: Into<FilterGroups>,
-	{
-		if let Some(filters) = filters {
-			let filter_groups: FilterGroups = filters.into();
-			// Print the entire filter groups for inspection
-			//
-			let condition: Condition = filter_groups.try_into()?;
-			dbg!(condition);
-		}
-
-		todo!()
-		let db = mm.db();
-
-		let mut query = Query::select();
-		query
-			.columns([
-				(ArchiveIden::Table, ArchiveIden::Id),
-				(ArchiveIden::Table, ArchiveIden::ProjectId),
-				(ArchiveIden::Table, ArchiveIden::Owner),
-				(ArchiveIden::Table, ArchiveIden::LastEditUser),
-				(ArchiveIden::Table, ArchiveIden::Tag),
-				(ArchiveIden::Table, ArchiveIden::Cid),
-				(ArchiveIden::Table, ArchiveIden::Ctime),
-				(ArchiveIden::Table, ArchiveIden::Mid),
-				(ArchiveIden::Table, ArchiveIden::Mtime),
-			])
-			.from(ArchiveIden::Table)
-			.inner_join(
-				ValueIden::Table,
-				Expr::col((ArchiveIden::Table, ArchiveIden::Id))
-					.equals((ValueIden::Table, ValueIden::ArchiveId)),
-			);
-
-		if let Some(filters) = filters {
-			let filter_groups: FilterGroups = filters.into();
-			let condition: Condition = filter_groups.try_into()?;
-			query.cond_where(condition);
-		}
-
-		let list_options = compute_list_options(list_options)?;
-		list_options.apply_to_sea_query(&mut query);
-
-		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
-
-		let archives = sqlx::query_as_with::<_, Archive, _>(&sql, values)
-			.fetch_all(db)
-			.await?;
-
-		Ok(archives)
-	}
-	*/
 }

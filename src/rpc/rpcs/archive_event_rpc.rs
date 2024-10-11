@@ -6,7 +6,7 @@ use crate::core::model::ModelManager;
 use crate::rpc::params::{ParamsIded, ParamsList};
 use crate::rpc::Result;
 
-pub async fn list_events(
+pub async fn list_archive_events(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<ArchiveEventFilter>,
