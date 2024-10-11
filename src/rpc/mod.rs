@@ -6,9 +6,10 @@ mod rpcs;
 pub use self::error::{Error, Result};
 
 use self::rpcs::{
-	archive_event_rpc::*, archive_rpc::*, comment_rpc::*, datatype_rpc::*,
-	document_rpc::*, index_rpc::*, role_rpc::*, search_operations_rpc::*,
-	separator_rpc::*, structure_rpc::*, user_rpc::*, value_rpc::*,
+	archive_comment_rpc::*, archive_event_rpc::*, archive_rpc::*, datatype_rpc::*,
+	document_comment_rpc::*, document_event_rpc::*, document_rpc::*, index_rpc::*,
+	role_rpc::*, search_operations_rpc::*, separator_rpc::*, structure_rpc::*,
+	user_rpc::*, value_rpc::*,
 };
 use crate::core::{ctx::Ctx, model::ModelManager};
 use axum::body::Bytes;
@@ -180,7 +181,7 @@ pub async fn exec_rpc(
 		"update_separator" => exec_rpc_fn!(update_separator, ctx, mm, rpc_params),
 		"delete_separator" => exec_rpc_fn!(delete_separator, ctx, mm, rpc_params),
 
-		// Document CRUD
+		// Document crud
 		"create_document" => {
 			exec_rpc_fn!(create_document, ctx, mm, rpc_params, file, true)
 		}
@@ -191,13 +192,37 @@ pub async fn exec_rpc(
 		}
 		"delete_document" => exec_rpc_fn!(delete_document, ctx, mm, rpc_params),
 
-		// Comment CRUD
-		"create_comment" => exec_rpc_fn!(create_comment, ctx, mm, rpc_params),
-		"get_comment" => exec_rpc_fn!(get_comment, ctx, mm, rpc_params),
-		"list_comments" => exec_rpc_fn!(list_comments, ctx, mm, rpc_params),
+		// document comment crud
+		"create_document_comment" => {
+			exec_rpc_fn!(create_document_comment, ctx, mm, rpc_params)
+		}
+		"get_document_comment" => {
+			exec_rpc_fn!(get_document_comment, ctx, mm, rpc_params)
+		}
+		"list_document_comments" => {
+			exec_rpc_fn!(list_document_comments, ctx, mm, rpc_params)
+		}
+
+		// archive comment crud
+		"create_archive_comment" => {
+			exec_rpc_fn!(create_archive_comment, ctx, mm, rpc_params)
+		}
+		"get_archive_comment" => {
+			exec_rpc_fn!(get_archive_comment, ctx, mm, rpc_params)
+		}
+		"list_archive_comments" => {
+			exec_rpc_fn!(list_archive_comments, ctx, mm, rpc_params)
+		}
 
 		// Event CRUD
-		"list_events" => exec_rpc_fn!(list_events, ctx, mm, rpc_params),
+		"list_archive_events" => {
+			exec_rpc_fn!(list_archive_events, ctx, mm, rpc_params)
+		}
+
+		// Event CRUD
+		"list_document_events" => {
+			exec_rpc_fn!(list_document_events, ctx, mm, rpc_params)
+		}
 
 		// Search Operations
 		"get_project_fields" => {

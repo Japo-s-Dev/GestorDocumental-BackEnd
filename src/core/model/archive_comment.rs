@@ -66,7 +66,7 @@ pub struct ArchiveCommentFilter {
 pub struct ArchiveCommentBmc;
 
 impl DbBmc for ArchiveCommentBmc {
-	const TABLE: &'static str = "comment";
+	const TABLE: &'static str = "archive_comment";
 }
 
 impl ArchiveCommentBmc {

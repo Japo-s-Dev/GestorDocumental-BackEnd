@@ -3,11 +3,13 @@
 pub mod archive;
 pub mod archive_comment;
 pub mod archive_event;
+pub mod associated_privilege;
 mod base;
 pub mod bucket;
 pub mod datatype;
 pub mod document;
 pub mod document_comment;
+pub mod document_event;
 pub mod error;
 pub mod index;
 pub mod modql_utils;

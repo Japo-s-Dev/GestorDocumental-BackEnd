@@ -6,7 +6,7 @@ use crate::core::model::ModelManager;
 use crate::rpc::params::{ParamsForCreate, ParamsIded, ParamsList};
 use crate::rpc::Result;
 
-pub async fn create_comment(
+pub async fn create_archive_comment(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsForCreate<ArchiveCommentForOp>,
@@ -19,7 +19,7 @@ pub async fn create_comment(
 	Ok(comment)
 }
 
-pub async fn list_comments(
+pub async fn list_archive_comments(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<ArchiveCommentFilter>,
@@ -31,7 +31,7 @@ pub async fn list_comments(
 	Ok(comments)
 }
 
-pub async fn get_comment(
+pub async fn get_archive_comment(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsIded,

@@ -51,7 +51,7 @@ pub struct ArchiveEventFilter {
 pub struct ArchiveEventBmc;
 
 impl DbBmc for ArchiveEventBmc {
-	const TABLE: &'static str = "event";
+	const TABLE: &'static str = "archive_event";
 }
 
 impl ArchiveEventBmc {
