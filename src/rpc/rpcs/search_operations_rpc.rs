@@ -10,7 +10,7 @@ use crate::core::model::search_operations::{
 };
 use crate::core::model::separator::{Separator, SeparatorBmc};
 use crate::core::model::ModelManager;
-use crate::rpc::params::{ParamsIded, ParamsList};
+use crate::rpc::params::{ParamsIded, ParamsList, Paramslist};
 use crate::rpc::Result;
 use futures::future::BoxFuture;
 use futures::FutureExt;
@@ -44,7 +44,7 @@ pub async fn get_project_fields(
 pub async fn search_archives(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsList<ArchiveIndexFilter>,
+	params: Paramslist<ArchiveIndexFilter>,
 ) -> Result<Vec<Archive>> {
 	let archives =
 		SearchBmc::search_archives(&ctx, &mm, params.filters, params.list_options)
