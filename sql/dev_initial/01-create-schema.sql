@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS public.separator_privilege;
-DROP TABLE IF EXISTS public.project_privilege;
+DROP TABLE IF EXISTS public.structure_privilege;
 DROP TABLE IF EXISTS public.log_detail;
 DROP TABLE IF EXISTS public.log_session;
 DROP TABLE IF EXISTS public.document;
@@ -10,10 +10,10 @@ DROP TABLE IF EXISTS public.comment;
 DROP TABLE IF EXISTS public.archive cascade;
 DROP TABLE IF EXISTS public."user";
 DROP TABLE IF EXISTS public.assosiated_privilege;
-DROP TABLE IF EXISTS public.role;
+DROP TABLE IF EXISTS public.role cascade;
 DROP TABLE IF EXISTS public.index cascade;
 DROP TABLE IF EXISTS public.privilege;
-DROP TABLE IF EXISTS public.structure;
+DROP TABLE IF EXISTS public.structure cascade;
 DROP TABLE IF EXISTS public.datatype cascade;
 
 CREATE TABLE IF NOT EXISTS
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS
     );
 
 CREATE TABLE IF NOT EXISTS
-    public.project (
+    public.structure (
         id BIGSERIAL PRIMARY KEY,
         project_name VARCHAR(50) NOT NULL,
         cid bigint NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS
         ctime timestamp with time zone NOT NULL default now(),
         mid bigint NOT NULL,
         mtime timestamp with time zone NOT NULL  default now(),
-        FOREIGN KEY (project_id) REFERENCES project(id),
+        FOREIGN KEY (project_id) REFERENCES structure(id),
         FOREIGN KEY (datatype_id) REFERENCES datatype(id)
     );
 
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS
     );
 
 CREATE TABLE IF NOT EXISTS
-    public.comment (
+    public.archive_comment (
         id BIGSERIAL PRIMARY KEY,
         archive_id BIGINT NOT NULL,
         text VARCHAR(250) NOT NULL,
@@ -128,6 +128,21 @@ CREATE TABLE IF NOT EXISTS
         mid bigint NOT NULL,
         mtime timestamp with time zone NOT NULL default now(),
         FOREIGN KEY (archive_id) REFERENCES archive(id),
+        FOREIGN KEY (user_id) REFERENCES "user" (id)
+    );
+
+
+CREATE TABLE IF NOT EXISTS
+    public.document_comment (
+        id BIGSERIAL PRIMARY KEY,
+        document_id BIGINT NOT NULL,
+        text VARCHAR(250) NOT NULL,
+        user_id BIGINT NOT NULL,
+        cid bigint NOT NULL,
+        ctime timestamp with time zone NOT NULL default now(),
+        mid bigint NOT NULL,
+        mtime timestamp with time zone NOT NULL default now(),
+        FOREIGN KEY (document_id) REFERENCES document(id),
         FOREIGN KEY (user_id) REFERENCES "user" (id)
     );
 
@@ -158,7 +173,7 @@ CREATE TABLE IF NOT EXISTS
         mid bigint NOT NULL,
         mtime timestamp with time zone NOT NULL  default now(),
         FOREIGN KEY (index_id) REFERENCES index(id),
-        FOREIGN KEY (project_id) REFERENCES project(id),
+        FOREIGN KEY (project_id) REFERENCES structure(id),
         FOREIGN KEY (archive_id) REFERENCES archive(id),
         FOREIGN KEY (last_edit_user) REFERENCES "user" (id)
     );
@@ -168,7 +183,7 @@ CREATE TABLE IF NOT EXISTS
         id BIGSERIAL PRIMARY KEY,
         archive_id BIGINT NOT NULL,
         separator_id BIGINT NOT NULL,
-        name VARCHAR(50) NOT NULL,
+        name VARCHAR(256) NOT NULL,
         doc_type VARCHAR(50) NOT NULL,
         cid bigint NOT NULL,
         ctime timestamp with time zone NOT NULL default now(),
@@ -176,7 +191,7 @@ CREATE TABLE IF NOT EXISTS
         mtime timestamp with time zone NOT NULL  default now(),
         owner BIGINT NOT NULL,
         last_edit_user BIGINT,
-        url VARCHAR(256) NOT NULL,
+        "key" VARCHAR(256) NOT NULL,
         FOREIGN KEY (archive_id) REFERENCES archive(id),
         FOREIGN KEY (separator_id) REFERENCES separator(id),
         FOREIGN KEY (owner) REFERENCES "user" (id),
@@ -197,19 +212,19 @@ CREATE TABLE IF NOT EXISTS
         mid bigint NOT NULL,
         mtime timestamp with time zone NOT NULL  default now(),
         PRIMARY KEY (id_log, user_id),
-        FOREIGN KEY (id_log) REFERENCES log_session (id),aur/notion-app-electron
+        FOREIGN KEY (id_log) REFERENCES log_session (id),
         FOREIGN KEY (user_id) REFERENCES "user" (id)
     );
 
 CREATE TABLE IF NOT EXISTS
-    public.project_privilege (
+    public.structure_privilege (
         project_id BIGINT,
         role_name VARCHAR(50),
         cid bigint NOT NULL,
         ctime timestamp with time zone NOT NULL default now(),
         mid bigint NOT NULL,
         mtime timestamp with time zone NOT NULL  default now(),
-        FOREIGN KEY (project_id) REFERENCES project(id),
+        FOREIGN KEY (project_id) REFERENCES structure(id),
         FOREIGN KEY (role_name) REFERENCES role(role_name)
 );
 
@@ -225,7 +240,7 @@ CREATE TABLE IF NOT EXISTS
         FOREIGN KEY (role_name) REFERENCES role(role_name)
 );
 
-CREATE TABLE IF NOT EXISTS public.event (
+CREATE TABLE IF NOT EXISTS public.archive_event (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     action VARCHAR(128) NOT NULL,
@@ -236,6 +251,19 @@ CREATE TABLE IF NOT EXISTS public.event (
     FOREIGN KEY (archive_id) REFERENCES public.archive(id),
     FOREIGN KEY (user_id) REFERENCES public."user"(id)
 );
+
+CREATE TABLE IF NOT EXISTS public.document_event (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    action VARCHAR(128) NOT NULL,
+    object VARCHAR(128) NOT NULL,
+    object_id BIGINT NOT NULL,
+    document_id BIGINT NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    FOREIGN KEY (document_id) REFERENCES public.document(id),
+    FOREIGN KEY (user_id) REFERENCES public."user"(id)
+);
+
 
 CREATE OR REPLACE FUNCTION log_document_event()
 RETURNS TRIGGER AS $$
@@ -305,5 +333,6 @@ CREATE TRIGGER separator_event_trigger
 AFTER INSERT OR UPDATE OR DELETE ON separator
 FOR EACH ROW
 EXECUTE FUNCTION log_separator_event();
+
 
 

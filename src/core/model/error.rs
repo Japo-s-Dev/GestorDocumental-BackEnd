@@ -28,6 +28,7 @@ pub enum Error {
 	UnknownIndexId(i64),
 	InvalidValue(String),
 	UnsupportedOperator(String),
+	UnsupportedDatatype(i64),
 
 	// -- Modules
 	#[from]
