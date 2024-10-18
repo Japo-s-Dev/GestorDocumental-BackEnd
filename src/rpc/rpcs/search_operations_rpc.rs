@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::core::ctx::Ctx;
 use crate::core::model::archive::Archive;
 use crate::core::model::archive_event::ArchiveEventFilter;
+use crate::core::model::base::ListResult;
 use crate::core::model::document::{Document, DocumentBmc};
 use crate::core::model::index::IndexFilter;
 use crate::core::model::search_operations::{
@@ -45,7 +46,7 @@ pub async fn search_archives(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: Paramslist<ArchiveIndexFilter>,
-) -> Result<Vec<Archive>> {
+) -> Result<ListResult<Archive>> {
 	let archives =
 		SearchBmc::search_archives(&ctx, &mm, params.filters, params.list_options)
 			.await?;

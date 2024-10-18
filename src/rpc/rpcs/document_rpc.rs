@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use crate::core::ctx::Ctx;
+use crate::core::model::base::ListResult;
 use crate::core::model::document::{
 	Document, DocumentBmc, DocumentFilter, DocumentForCreate, DocumentForRequest,
 	DocumentForUpdate,
@@ -49,7 +50,7 @@ pub async fn list_documents(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<DocumentFilter>,
-) -> Result<Vec<Document>> {
+) -> Result<ListResult<Document>> {
 	let documents =
 		DocumentBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
 

@@ -1,4 +1,5 @@
 use crate::core::ctx::Ctx;
+use crate::core::model::base::ListResult;
 use crate::core::model::separator::{
 	Separator, SeparatorBmc, SeparatorFilter, SeparatorForCreate, SeparatorForUpdate,
 };
@@ -23,7 +24,7 @@ pub async fn list_separators(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<SeparatorFilter>,
-) -> Result<Vec<Separator>> {
+) -> Result<ListResult<Separator>> {
 	let separators =
 		SeparatorBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
 
