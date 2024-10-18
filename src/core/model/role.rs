@@ -14,6 +14,8 @@ use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Role {
@@ -79,7 +81,7 @@ impl RoleBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<RoleFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Role>> {
+	) -> Result<ListResult<Role>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 

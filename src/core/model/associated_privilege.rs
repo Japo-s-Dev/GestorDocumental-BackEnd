@@ -11,6 +11,8 @@ use serde_with::serde_as;
 use sqlx::postgres::PgRow;
 use sqlx::FromRow;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct AssociatedPrivilege {
@@ -101,7 +103,7 @@ impl AssociatedPrivilegeBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<AssociatedPrivilegeFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<AssociatedPrivilege>> {
+	) -> Result<ListResult<AssociatedPrivilege>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 

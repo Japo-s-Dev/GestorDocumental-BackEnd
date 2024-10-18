@@ -16,6 +16,8 @@ use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Separator {
@@ -98,7 +100,7 @@ impl SeparatorBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<SeparatorFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Separator>> {
+	) -> Result<ListResult<Separator>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 

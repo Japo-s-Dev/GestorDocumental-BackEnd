@@ -14,6 +14,8 @@ use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Structure {
@@ -79,7 +81,7 @@ impl StructureBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<StructureFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Structure>> {
+	) -> Result<ListResult<Structure>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 

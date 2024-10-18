@@ -1,4 +1,5 @@
 use crate::core::ctx::Ctx;
+use crate::core::model::base::ListResult;
 use crate::core::model::structure::{
 	Structure, StructureBmc, StructureFilter, StructureForOp,
 };
@@ -22,7 +23,7 @@ pub async fn list_structures(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<StructureFilter>,
-) -> Result<Vec<Structure>> {
+) -> Result<ListResult<Structure>> {
 	let structures =
 		StructureBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
 

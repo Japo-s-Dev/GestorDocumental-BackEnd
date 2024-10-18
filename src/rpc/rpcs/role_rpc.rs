@@ -1,4 +1,5 @@
 use crate::core::ctx::Ctx;
+use crate::core::model::base::ListResult;
 use crate::core::model::role::{Role, RoleBmc, RoleFilter, RoleForOp};
 use crate::core::model::ModelManager;
 use crate::rpc::params::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
@@ -20,7 +21,7 @@ pub async fn list_roles(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<RoleFilter>,
-) -> Result<Vec<Role>> {
+) -> Result<ListResult<Role>> {
 	let roles =
 		RoleBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
 

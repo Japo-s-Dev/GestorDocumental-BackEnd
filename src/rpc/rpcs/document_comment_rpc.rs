@@ -1,4 +1,5 @@
 use crate::core::ctx::Ctx;
+use crate::core::model::base::ListResult;
 use crate::core::model::document_comment::{
 	DocumentComment, DocumentCommentBmc, DocumentCommentFilter, DocumentCommentForOp,
 };
@@ -23,7 +24,7 @@ pub async fn list_document_comments(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<DocumentCommentFilter>,
-) -> Result<Vec<DocumentComment>> {
+) -> Result<ListResult<DocumentComment>> {
 	let comments =
 		DocumentCommentBmc::list(&ctx, &mm, params.filters, params.list_options)
 			.await?;
