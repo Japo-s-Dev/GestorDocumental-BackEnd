@@ -1,4 +1,5 @@
 use crate::core::ctx::Ctx;
+use crate::core::model::base::ListResult;
 use crate::core::model::value::{
 	Value, ValueBmc, ValueFilter, ValueForCreate, ValueForUpdate,
 };
@@ -23,7 +24,7 @@ pub async fn list_values(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<ValueFilter>,
-) -> Result<Vec<Value>> {
+) -> Result<ListResult<Value>> {
 	let values =
 		ValueBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
 

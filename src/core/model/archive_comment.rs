@@ -12,6 +12,8 @@ use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct ArchiveComment {
@@ -99,7 +101,7 @@ impl ArchiveCommentBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<ArchiveCommentFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<ArchiveComment>> {
+	) -> Result<ListResult<ArchiveComment>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 

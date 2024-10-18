@@ -18,6 +18,8 @@ use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 use uuid::Uuid;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct User {
@@ -208,7 +210,7 @@ impl UserBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<UserFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<User>> {
+	) -> Result<ListResult<User>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 

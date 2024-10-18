@@ -1,4 +1,5 @@
 use crate::core::ctx::Ctx;
+use crate::core::model::base::ListResult;
 use crate::core::model::datatype::{
 	Datatype, DatatypeBmc, DatatypeFilter, DatatypeForOp,
 };
@@ -22,7 +23,7 @@ pub async fn list_datatypes(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<DatatypeFilter>,
-) -> Result<Vec<Datatype>> {
+) -> Result<ListResult<Datatype>> {
 	let datatypes =
 		DatatypeBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
 

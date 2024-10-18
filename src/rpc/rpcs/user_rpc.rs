@@ -1,4 +1,5 @@
 use crate::core::ctx::Ctx;
+use crate::core::model::base::ListResult;
 use crate::core::model::user::{
 	User, UserBmc, UserFilter, UserForCreate, UserForUpdate, UserForUpdatePwd,
 };
@@ -23,7 +24,7 @@ pub async fn list_users(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<UserFilter>,
-) -> Result<Vec<User>> {
+) -> Result<ListResult<User>> {
 	let users =
 		UserBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
 

@@ -18,7 +18,7 @@ use sqlx::{FromRow, QueryBuilder, Row};
 use tracing::debug;
 
 use super::archive::Archive;
-use super::base::compute_list_options;
+use super::base::{compute_list_options, ListResult};
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
@@ -229,7 +229,7 @@ impl SearchBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<ArchiveIndexFilter>>,
 		list_options: Option<Listoptions>,
-	) -> Result<Vec<Archive>> {
+	) -> Result<ListResult<Archive>> {
 		let db = mm.db();
 
 		// Unwrap filters and list options or use default values.
@@ -488,6 +488,167 @@ impl SearchBmc {
 			.fetch_all(db)
 			.await?;
 
-		Ok(archives)
+		let mut count_query_builder =
+			QueryBuilder::new("SELECT COUNT(*) FROM \"archive\"");
+
+		// Build INNER JOINs for each index_id.
+		let mut count_join_index = 0;
+
+		for (&index_id, index_filters) in &filters_by_index {
+			let alias = format!("v{}", count_join_index);
+			let datatype_id = index_datatype_ids
+				.get(&index_id)
+				.ok_or_else(|| Error::UnsupportedDatatype(index_id))?;
+
+			count_query_builder.push(format!(
+        " INNER JOIN \"value\" AS \"{}\" ON \"{}\".\"archive_id\" = \"archive\".\"id\" AND \"{}\".\"index_id\" = ",
+        alias, alias, alias
+    ));
+			count_query_builder.push_bind(index_id);
+
+			// Collect conditions for this index_id.
+			let mut eq_values = Vec::new();
+			let mut gte_value = None;
+			let mut lte_value = None;
+
+			for filter in index_filters {
+				match filter.operator.as_str() {
+					"Eq" => eq_values.push(&filter.value),
+					"Gte" => gte_value = Some(&filter.value),
+					"Lte" => lte_value = Some(&filter.value),
+					_ => return Err(Error::UnsupportedDatatype(index_id)),
+				}
+			}
+
+			// Adjust casting based on datatype_id and cast both sides.
+			match datatype_id {
+				3 => {
+					// TEXT
+					if !eq_values.is_empty() {
+						for value in eq_values {
+							count_query_builder.push(" AND ");
+							count_query_builder
+								.push(format!("\"{}\".\"value\" = ", alias));
+							count_query_builder.push_bind(value);
+						}
+					}
+					if gte_value.is_some() || lte_value.is_some() {
+						return Err(Error::UnsupportedDatatype(index_id));
+					}
+				}
+				4 => {
+					// NUMERIC
+					if !eq_values.is_empty() {
+						for value in eq_values {
+							count_query_builder.push(" AND ");
+							count_query_builder.push(format!(
+								"CAST(\"{}\".\"value\" AS NUMERIC) = CAST(",
+								alias
+							));
+							count_query_builder.push_bind(value);
+							count_query_builder.push(" AS NUMERIC)");
+						}
+					}
+					if gte_value.is_some() && lte_value.is_some() {
+						count_query_builder.push(" AND CAST(\"");
+						count_query_builder.push(&alias);
+						count_query_builder
+							.push("\".\"value\" AS NUMERIC) BETWEEN CAST(");
+						count_query_builder.push_bind(gte_value.unwrap());
+						count_query_builder.push(" AS NUMERIC) AND CAST(");
+						count_query_builder.push_bind(lte_value.unwrap());
+						count_query_builder.push(" AS NUMERIC)");
+					} else {
+						if let Some(value) = gte_value {
+							count_query_builder.push(" AND CAST(\"");
+							count_query_builder.push(&alias);
+							count_query_builder
+								.push("\".\"value\" AS NUMERIC) >= CAST(");
+							count_query_builder.push_bind(value);
+							count_query_builder.push(" AS NUMERIC)");
+						}
+						if let Some(value) = lte_value {
+							count_query_builder.push(" AND CAST(\"");
+							count_query_builder.push(&alias);
+							count_query_builder
+								.push("\".\"value\" AS NUMERIC) <= CAST(");
+							count_query_builder.push_bind(value);
+							count_query_builder.push(" AS NUMERIC)");
+						}
+					}
+				}
+				5 => {
+					// TIMESTAMP stored as mm-dd-yyyy
+					let date_format = "YYYY-MM-DD";
+					if !eq_values.is_empty() {
+						for value in eq_values {
+							count_query_builder.push(" AND ");
+							count_query_builder.push(format!(
+								"TO_DATE(\"{}\".\"value\", '{}') = TO_DATE(",
+								alias, date_format
+							));
+							count_query_builder.push_bind(value);
+							count_query_builder
+								.push(format!(", '{}')", date_format));
+						}
+					}
+					if gte_value.is_some() && lte_value.is_some() {
+						count_query_builder.push(" AND TO_DATE(\"");
+						count_query_builder.push(&alias);
+						count_query_builder.push(format!(
+							"\".\"value\", '{}') BETWEEN TO_DATE(",
+							date_format
+						));
+						count_query_builder.push_bind(gte_value.unwrap());
+						count_query_builder
+							.push(format!(", '{}') AND TO_DATE(", date_format));
+						count_query_builder.push_bind(lte_value.unwrap());
+						count_query_builder.push(format!(", '{}')", date_format));
+					} else {
+						if let Some(value) = gte_value {
+							count_query_builder.push(" AND TO_DATE(\"");
+							count_query_builder.push(&alias);
+							count_query_builder.push(format!(
+								"\".\"value\", '{}') >= TO_DATE(",
+								date_format
+							));
+							count_query_builder.push_bind(value);
+							count_query_builder
+								.push(format!(", '{}')", date_format));
+						}
+						if let Some(value) = lte_value {
+							count_query_builder.push(" AND TO_DATE(\"");
+							count_query_builder.push(&alias);
+							count_query_builder.push(format!(
+								"\".\"value\", '{}') <= TO_DATE(",
+								date_format
+							));
+							count_query_builder.push_bind(value);
+							count_query_builder
+								.push(format!(", '{}')", date_format));
+						}
+					}
+				}
+				_ => return Err(Error::UnsupportedDatatype(index_id)),
+			}
+
+			count_join_index += 1;
+		}
+
+		// Build the count query
+		let count_query = count_query_builder.build();
+
+		// Execute the count query and retrieve the total count
+		let total_count_row = count_query.fetch_one(db).await?;
+		let total_count: i64 = total_count_row.get(0);
+
+		// Convert total_count from i64 to usize
+		let total_count: usize = total_count.try_into().unwrap();
+
+		// Return the result
+		Ok(ListResult {
+			total_count,
+			items: archives,
+		})
 	}
 }

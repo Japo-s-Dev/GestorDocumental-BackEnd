@@ -5,12 +5,14 @@ use crate::utils::time::now_utc;
 use modql::field::{Field, Fields, HasFields};
 use modql::filter::{FilterGroups, ListOptions};
 use modql::SIden;
+use sea_query::Asterisk;
 use sea_query::{
-	Condition, Expr, Iden, IntoIden, PostgresQueryBuilder, Query, TableRef,
+	Alias, Condition, Expr, Iden, IntoIden, PostgresQueryBuilder, Query, TableRef,
 };
 use sea_query_binder::SqlxBinder;
+use serde::Serialize;
 use sqlx::postgres::PgRow;
-use sqlx::FromRow;
+use sqlx::{FromRow, Row};
 
 const LIST_LIMIT_DEFAULT: i64 = 1000;
 const LIST_LIMIT_MAX: i64 = 5000;
@@ -26,6 +28,12 @@ pub enum TimestampIden {
 	Ctime,
 	Mid,
 	Mtime,
+}
+
+#[derive(Serialize)]
+pub struct ListResult<E> {
+	pub total_count: usize,
+	pub items: Vec<E>,
 }
 
 pub trait DbBmc {
@@ -121,7 +129,7 @@ pub async fn list<MC, E, F>(
 	mm: &ModelManager,
 	filter: Option<F>,
 	list_options: Option<ListOptions>,
-) -> Result<Vec<E>>
+) -> Result<ListResult<E>>
 where
 	MC: DbBmc,
 	F: Into<FilterGroups>,
@@ -130,25 +138,50 @@ where
 {
 	let db = mm.db();
 
-	let mut query = Query::select();
-	query.from(MC::table_ref()).columns(E::field_column_refs());
+	// Build the base query
+	let mut base_query = Query::select();
+	base_query
+		.from(MC::table_ref())
+		.columns(E::field_column_refs());
 
 	if let Some(filter) = filter {
 		let filters: FilterGroups = filter.into();
 		let cond: Condition = filters.try_into()?;
-		query.cond_where(cond);
+		base_query.cond_where(cond);
 	}
 
+	// Clone the base query for counting
+	// Build a separate count query
+	let mut count_query = Query::select();
+	count_query.from(MC::table_ref());
+
+	// Modify the count query to select COUNT(*)
+	count_query.expr_as(Expr::col(Asterisk).count(), Alias::new("total_count"));
+
+	// Build and execute the count query
+	let (count_sql, count_values) = count_query.build_sqlx(PostgresQueryBuilder);
+	let total_count_row = sqlx::query_with(&count_sql, count_values)
+		.fetch_one(db)
+		.await?;
+
+	// Use the `get` method to retrieve the total count
+	let total_count: i64 = total_count_row.get("total_count");
+
+	// Apply limit and offset to the base query
 	let list_options = compute_list_options(list_options)?;
+	list_options.apply_to_sea_query(&mut base_query);
 
-	list_options.apply_to_sea_query(&mut query);
-
-	let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+	// Build and execute the original query
+	let (sql, values) = base_query.build_sqlx(PostgresQueryBuilder);
 	let entities = sqlx::query_as_with::<_, E, _>(&sql, values)
 		.fetch_all(db)
 		.await?;
 
-	Ok(entities)
+	// Return the result
+	Ok(ListResult {
+		total_count: total_count as usize,
+		items: entities,
+	})
 }
 
 pub async fn update<MC, E>(
