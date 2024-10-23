@@ -69,6 +69,7 @@ pub struct DocumentCommentBmc;
 
 impl DbBmc for DocumentCommentBmc {
 	const TABLE: &'static str = "document_comment";
+	const TIMESTAMPED: bool = true;
 }
 
 impl DocumentCommentBmc {

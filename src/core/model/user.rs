@@ -119,6 +119,7 @@ pub struct UserBmc;
 
 impl DbBmc for UserBmc {
 	const TABLE: &'static str = "user";
+	const TIMESTAMPED: bool = true;
 }
 
 impl UserBmc {

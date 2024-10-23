@@ -56,6 +56,7 @@ pub struct AssociatedPrivilegeBmc;
 
 impl DbBmc for AssociatedPrivilegeBmc {
 	const TABLE: &'static str = "assosiated_privilege";
+	const TIMESTAMPED: bool = true;
 }
 
 impl AssociatedPrivilegeBmc {

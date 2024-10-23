@@ -120,6 +120,7 @@ pub struct DocumentBmc;
 
 impl DbBmc for DocumentBmc {
 	const TABLE: &'static str = "document";
+	const TIMESTAMPED: bool = true;
 }
 
 impl DocumentBmc {

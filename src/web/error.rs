@@ -80,6 +80,7 @@ impl std::error::Error for Error {}
 /// From the root error to the http status code and ClientError
 impl Error {
 	pub fn client_status_and_error(&self) -> (StatusCode, ClientError) {
+		use crate::rpc::Error::NotAllowed;
 		use web::Error::*;
 
 		match self {
@@ -114,6 +115,7 @@ impl Error {
 pub enum ClientError {
 	LOGIN_FAIL,
 	NO_AUTH,
+	FORBIDDEN,
 	ENTITY_NOT_FOUND { entity: &'static str, id: i64 },
 
 	SERVICE_ERROR,

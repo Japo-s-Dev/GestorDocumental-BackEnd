@@ -22,6 +22,8 @@ pub enum Error {
 		rpc_method: String,
 		message: String,
 	},
+
+	NotAllowed,
 	// -- Document errors,
 	RequestMissingFiles,
 

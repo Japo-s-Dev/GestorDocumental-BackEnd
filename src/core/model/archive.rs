@@ -88,6 +88,7 @@ pub struct ArchiveBmc;
 
 impl DbBmc for ArchiveBmc {
 	const TABLE: &'static str = "archive";
+	const TIMESTAMPED: bool = true;
 }
 
 impl ArchiveBmc {

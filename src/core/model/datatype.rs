@@ -55,6 +55,7 @@ pub struct DatatypeBmc;
 
 impl DbBmc for DatatypeBmc {
 	const TABLE: &'static str = "datatype";
+	const TIMESTAMPED: bool = false;
 }
 
 impl DatatypeBmc {

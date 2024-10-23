@@ -90,6 +90,7 @@ pub struct ValueBmc;
 
 impl DbBmc for ValueBmc {
 	const TABLE: &'static str = "value";
+	const TIMESTAMPED: bool = true;
 }
 
 impl ValueBmc {
