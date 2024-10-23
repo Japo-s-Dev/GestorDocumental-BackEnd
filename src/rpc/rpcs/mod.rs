@@ -1,11 +1,13 @@
 pub mod archive_comment_rpc;
-pub mod archive_event_rpc;
+//pub mod archive_event_rpc;
 pub mod archive_rpc;
 pub mod datatype_rpc;
 pub mod document_comment_rpc;
-pub mod document_event_rpc;
+//pub mod document_event_rpc;
 pub mod document_rpc;
+pub mod event_rpc;
 pub mod index_rpc;
+pub mod privilege_rpc;
 pub mod role_rpc;
 pub mod search_operations_rpc;
 pub mod separator_rpc;

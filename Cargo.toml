@@ -24,8 +24,8 @@ tower-http = { version = "0.5", features = ["full"] }
 tower-cookies = "0.10"
 # -- Data
 sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "uuid" ] }
-sea-query = "0.30"
-sea-query-binder = {version = "0.5" , features = ["sqlx-postgres","with-uuid", "with-time"]}
+sea-query = { version = "0.30", features = ["with-json"]}
+sea-query-binder = {version = "0.5" , features = ["sqlx-postgres","with-uuid", "with-time", "with-json"]}
 modql = { version = "0.3.4", features = ["with-sea-query"] }
 # -- Documents
 aws-config = "1.5.5"
@@ -46,7 +46,6 @@ lazy-regex = "3"
 time = {version = "0.3", features = ["formatting", "parsing", "serde"]}
 async-trait = "0.1"
 strum_macros = "0.25"
-anyhow = "1"
 derive_more = {version = "1.0.0-beta", features = ["from"] }
 enum_dispatch = "0.3"
 regex = "1.11"

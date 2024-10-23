@@ -95,7 +95,7 @@ async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResul
 		.map_err(|_| CtxExtError::CannotSetPrivilegesCookie)?;
 
 	// -- Create CtxExtResult
-	Ctx::new(user.id)
+	Ctx::new(user.id, privilege_ids)
 		.map(CtxW)
 		.map_err(|ex| CtxExtError::CtxCreateFail(ex.to_string()))
 }

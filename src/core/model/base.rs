@@ -39,6 +39,8 @@ pub struct ListResult<E> {
 pub trait DbBmc {
 	const TABLE: &'static str;
 
+	const TIMESTAMPED: bool;
+
 	fn table_ref() -> TableRef {
 		TableRef::Table(SIden(Self::TABLE).into_iden())
 	}
@@ -78,7 +80,9 @@ where
 
 	// -- Prep data
 	let mut fields = data.not_none_fields();
-	add_timestamps_for_create(&mut fields, ctx.user_id());
+	if MC::TIMESTAMPED {
+		add_timestamps_for_create(&mut fields, ctx.user_id());
+	}
 	let (columns, sea_values) = fields.for_sea_insert();
 
 	// -- Build query
@@ -197,7 +201,9 @@ where
 	let db = mm.db();
 
 	let mut fields = data.not_none_fields();
-	add_timestamps_for_update(&mut fields, ctx.user_id());
+	if MC::TIMESTAMPED {
+		add_timestamps_for_update(&mut fields, ctx.user_id());
+	}
 	let fields = fields.for_sea_update();
 
 	let mut query = Query::update();

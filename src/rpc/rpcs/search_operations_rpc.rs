@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::core::ctx::Ctx;
 use crate::core::model::archive::Archive;
-use crate::core::model::archive_event::ArchiveEventFilter;
+//use crate::core::model::archive_event::ArchiveEventFilter;
 use crate::core::model::base::ListResult;
 use crate::core::model::document::{Document, DocumentBmc};
 use crate::core::model::index::IndexFilter;
@@ -53,7 +53,7 @@ pub async fn search_archives(
 
 	Ok(archives)
 }
-
+/*
 pub async fn get_events_with_filters(
 	ctx: Ctx,
 	mm: ModelManager,
@@ -69,7 +69,7 @@ pub async fn get_events_with_filters(
 
 	Ok(events)
 }
-
+*/
 pub fn build_tree(
 	parent_name: String,
 	parent_id: Option<i64>,

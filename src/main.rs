@@ -16,6 +16,8 @@ use crate::web::mw_res_map::mw_reponse_map;
 use crate::web::{routes_login, routes_rpc, routes_static};
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, COOKIE, SET_COOKIE};
 use axum::http::{HeaderValue, Method};
+use axum::response::Html;
+use axum::routing::get;
 use axum::{middleware, Router};
 pub use config::web_config;
 use core::model::ModelManager;
@@ -60,6 +62,10 @@ async fn main() -> Result<()> {
 	let mm = ModelManager::new().await?;
 
 	// -- Define Routes
+	let route_healthcheck = Router::new()
+		.route("/healthcheck", get(|| async { Html("I'm alive") }))
+		.route_layer(middleware::from_fn(mw_ctx_require));
+
 	let routes_rpc = routes_rpc::routes(mm.clone())
 		.route_layer(middleware::from_fn(mw_ctx_require));
 
@@ -70,7 +76,8 @@ async fn main() -> Result<()> {
 		.layer(cors.clone())
 		.layer(middleware::from_fn_with_state(mm.clone(), mw_ctx_resolve))
 		.layer(CookieManagerLayer::new())
-		.fallback_service(routes_static::serve_dir());
+		.fallback_service(routes_static::serve_dir())
+		.merge(route_healthcheck);
 
 	// region:    --- Start Server
 	let listener = TcpListener::bind("0.0.0.0:8080").await.unwrap();

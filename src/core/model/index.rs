@@ -73,6 +73,7 @@ pub struct IndexBmc;
 
 impl DbBmc for IndexBmc {
 	const TABLE: &'static str = "index";
+	const TIMESTAMPED: bool = false;
 }
 
 impl IndexBmc {

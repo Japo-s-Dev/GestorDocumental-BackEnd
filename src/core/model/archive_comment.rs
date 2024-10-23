@@ -69,6 +69,7 @@ pub struct ArchiveCommentBmc;
 
 impl DbBmc for ArchiveCommentBmc {
 	const TABLE: &'static str = "archive_comment";
+	const TIMESTAMPED: bool = true;
 }
 
 impl ArchiveCommentBmc {
