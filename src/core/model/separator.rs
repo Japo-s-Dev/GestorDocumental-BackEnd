@@ -73,6 +73,7 @@ pub struct SeparatorFilter {
 
 impl DbBmc for SeparatorBmc {
 	const TABLE: &'static str = "separator";
+	const TIMESTAMPED: bool = true;
 }
 
 #[derive(Iden)]

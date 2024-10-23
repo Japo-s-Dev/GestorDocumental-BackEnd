@@ -18,30 +18,28 @@ use super::base::ListResult;
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
-pub struct DocumentEvent {
+pub struct Event {
 	pub id: i64,
-	pub document_id: i64,
 	pub user_id: i64,
 	pub action: String,
 	pub object: String,
 	pub object_id: i64,
+
 	#[serde_as(as = "Rfc3339")]
 	pub timestamp: OffsetDateTime,
+	pub old_data: Option<serde_json::Value>,
+	pub new_data: Option<serde_json::Value>,
+	pub additional_info: Option<serde_json::Value>,
 }
 
 #[allow(dead_code)]
-pub trait DocumentEventBy:
-	HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send
-{
-}
+pub trait EventBy: HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
-impl DocumentEventBy for DocumentEvent {}
+impl EventBy for Event {}
 
 #[derive(FilterNodes, Deserialize, Default, Debug)]
-pub struct DocumentEventFilter {
+pub struct EventFilter {
 	id: Option<OpValsInt64>,
-
-	document_id: Option<OpValsInt64>,
 	user_id: Option<OpValsInt64>,
 	action: Option<OpValsString>,
 	object: Option<OpValsString>,
@@ -50,18 +48,15 @@ pub struct DocumentEventFilter {
 	timestamp: Option<OpValsValue>,
 }
 
-pub struct DocumentEventBmc;
+pub struct EventBmc;
 
-impl DbBmc for DocumentEventBmc {
-	const TABLE: &'static str = "document_event";
+impl DbBmc for EventBmc {
+	const TABLE: &'static str = "event";
+	const TIMESTAMPED: bool = false;
 }
 
-impl DocumentEventBmc {
-	pub async fn get(
-		ctx: &Ctx,
-		mm: &ModelManager,
-		id: i64,
-	) -> Result<DocumentEvent> {
+impl EventBmc {
+	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Event> {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 	/*
@@ -84,9 +79,9 @@ impl DocumentEventBmc {
 	pub async fn list(
 		ctx: &Ctx,
 		mm: &ModelManager,
-		filters: Option<Vec<DocumentEventFilter>>,
+		filters: Option<Vec<EventFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<ListResult<DocumentEvent>> {
+	) -> Result<ListResult<Event>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 	/*

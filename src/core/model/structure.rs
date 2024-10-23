@@ -59,6 +59,7 @@ pub struct StructureFilter {
 
 impl DbBmc for StructureBmc {
 	const TABLE: &'static str = "structure";
+	const TIMESTAMPED: bool = true;
 }
 
 impl StructureBmc {

@@ -2,14 +2,15 @@ mod config;
 mod error;
 mod params;
 mod rpcs;
+mod utils;
 
 pub use self::error::{Error, Result};
 
 use self::rpcs::{
-	archive_comment_rpc::*, archive_event_rpc::*, archive_rpc::*, datatype_rpc::*,
-	document_comment_rpc::*, document_event_rpc::*, document_rpc::*, index_rpc::*,
-	role_rpc::*, search_operations_rpc::*, separator_rpc::*, structure_rpc::*,
-	user_rpc::*, value_rpc::*,
+	archive_comment_rpc::*, archive_rpc::*, datatype_rpc::*,
+	document_comment_rpc::*, document_rpc::*, event_rpc::*, index_rpc::*,
+	privilege_rpc::*, role_rpc::*, search_operations_rpc::*, separator_rpc::*,
+	structure_rpc::*, user_rpc::*, value_rpc::*,
 };
 use crate::core::{ctx::Ctx, model::ModelManager};
 use axum::body::Bytes;
@@ -215,14 +216,18 @@ pub async fn exec_rpc(
 		}
 
 		// Event CRUD
-		"list_archive_events" => {
-			exec_rpc_fn!(list_archive_events, ctx, mm, rpc_params)
+		"list_events" => {
+			exec_rpc_fn!(list_events, ctx, mm, rpc_params)
 		}
-
+		/*
 		// Event CRUD
 		"list_document_events" => {
 			exec_rpc_fn!(list_document_events, ctx, mm, rpc_params)
 		}
+		*/
+		// Privilege CRUD
+		"list_privileges" => exec_rpc_fn!(list_privileges, ctx, mm, rpc_params),
+		"get_privilege" => exec_rpc_fn!(get_privilege, ctx, mm, rpc_params),
 
 		// Search Operations
 		"get_project_fields" => {
@@ -231,9 +236,11 @@ pub async fn exec_rpc(
 		"get_file_tree" => {
 			exec_rpc_fn!(get_file_tree, ctx, mm, rpc_params)
 		}
+		/*
 		"get_events_with_filters" => {
 			exec_rpc_fn!(get_events_with_filters, ctx, mm, rpc_params)
 		}
+		*/
 		"search_archives" => {
 			exec_rpc_fn!(search_archives, ctx, mm, rpc_params)
 		}
