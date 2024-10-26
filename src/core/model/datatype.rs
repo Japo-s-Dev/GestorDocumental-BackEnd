@@ -19,12 +19,6 @@ use super::base::ListResult;
 pub struct Datatype {
 	pub id: i64,
 	pub datatype_name: String,
-	pub cid: i64,
-	#[serde_as(as = "Rfc3339")]
-	pub ctime: OffsetDateTime,
-	pub mid: i64,
-	#[serde_as(as = "Rfc3339")]
-	pub mtime: OffsetDateTime,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
@@ -43,12 +37,6 @@ pub struct DatatypeFilter {
 	id: Option<OpValsInt64>,
 
 	datatype_name: Option<OpValsInt64>,
-	cid: Option<OpValsInt64>,
-	#[modql(to_sea_value_fn = "time_to_sea_value")]
-	ctime: Option<OpValsValue>,
-	mid: Option<OpValsInt64>,
-	#[modql(to_sea_value_fn = "time_to_sea_value")]
-	mtime: Option<OpValsValue>,
 }
 
 pub struct DatatypeBmc;
@@ -56,6 +44,7 @@ pub struct DatatypeBmc;
 impl DbBmc for DatatypeBmc {
 	const TABLE: &'static str = "datatype";
 	const TIMESTAMPED: bool = false;
+	const SCHEMA: Option<&'static str> = Some("consts");
 }
 
 impl DatatypeBmc {
