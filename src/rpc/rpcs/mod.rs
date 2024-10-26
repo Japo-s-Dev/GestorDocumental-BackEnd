@@ -1,9 +1,8 @@
 pub mod archive_comment_rpc;
-//pub mod archive_event_rpc;
 pub mod archive_rpc;
+pub mod associated_privilege_rpc;
 pub mod datatype_rpc;
 pub mod document_comment_rpc;
-//pub mod document_event_rpc;
 pub mod document_rpc;
 pub mod event_rpc;
 pub mod index_rpc;

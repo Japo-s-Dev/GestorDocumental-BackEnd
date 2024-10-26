@@ -7,10 +7,10 @@ mod utils;
 pub use self::error::{Error, Result};
 
 use self::rpcs::{
-	archive_comment_rpc::*, archive_rpc::*, datatype_rpc::*,
-	document_comment_rpc::*, document_rpc::*, event_rpc::*, index_rpc::*,
-	privilege_rpc::*, role_rpc::*, search_operations_rpc::*, separator_rpc::*,
-	structure_rpc::*, user_rpc::*, value_rpc::*,
+	archive_comment_rpc::*, archive_rpc::*, associated_privilege_rpc::*,
+	datatype_rpc::*, document_comment_rpc::*, document_rpc::*, event_rpc::*,
+	index_rpc::*, privilege_rpc::*, role_rpc::*, search_operations_rpc::*,
+	separator_rpc::*, structure_rpc::*, user_rpc::*, value_rpc::*,
 };
 use crate::core::{ctx::Ctx, model::ModelManager};
 use axum::body::Bytes;
@@ -246,6 +246,28 @@ pub async fn exec_rpc(
 		}
 		"get_doc_url" => {
 			exec_rpc_fn!(get_doc_url, ctx, mm, rpc_params)
+		}
+
+		// Permission association CRUD
+		"create_association" => {
+			exec_rpc_fn!(create_associated_privilege, ctx, mm, rpc_params)
+		}
+		"list_association" => {
+			exec_rpc_fn!(list_associated_privileges, ctx, mm, rpc_params)
+		}
+		"list_associations_by_role" => {
+			exec_rpc_fn!(
+				list_associated_privileges_by_role_name,
+				ctx,
+				mm,
+				rpc_params
+			)
+		}
+		"get_associated_privilege" => {
+			exec_rpc_fn!(get_associated_privilege, ctx, mm, rpc_params)
+		}
+		"delete_associated_privilege" => {
+			exec_rpc_fn!(delete_associated_privilege, ctx, mm, rpc_params)
 		}
 
 		// -- Fallback error

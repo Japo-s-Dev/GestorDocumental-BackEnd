@@ -38,11 +38,17 @@ pub struct ListResult<E> {
 
 pub trait DbBmc {
 	const TABLE: &'static str;
-
+	const SCHEMA: Option<&'static str> = None;
 	const TIMESTAMPED: bool;
 
 	fn table_ref() -> TableRef {
-		TableRef::Table(SIden(Self::TABLE).into_iden())
+		match Self::SCHEMA {
+			Some(schema) => TableRef::SchemaTable(
+				SIden(schema).into_iden(),
+				SIden(Self::TABLE).into_iden(),
+			),
+			None => TableRef::Table(SIden(Self::TABLE).into_iden()),
+		}
 	}
 }
 

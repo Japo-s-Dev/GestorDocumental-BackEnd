@@ -27,6 +27,11 @@ pub struct AssociatedPrivilegeForOp {
 	pub privilege_id: i64,
 }
 
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct AssociatedPrivilegeForSearchByRole {
+	pub role_name: String,
+}
+
 #[allow(dead_code)]
 pub trait AssociatedPrivilegeBy:
 	HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send
