@@ -1,15 +1,12 @@
 use crate::core::ctx::Ctx;
 use crate::core::model::base::{self, DbBmc};
-use crate::core::model::modql_utils::time_to_sea_value;
 use crate::core::model::ModelManager;
 use crate::core::model::Result;
-use crate::utils::time::Rfc3339;
 use modql::field::{Fields, HasFields};
-use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsValue};
+use modql::filter::{FilterNodes, ListOptions, OpValsInt64};
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::postgres::PgRow;
-use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
 use super::base::ListResult;
@@ -81,6 +78,6 @@ impl DatatypeBmc {
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
-		base::delete::<Self>(ctx, mm, id).await
+		base::phisical_delete::<Self>(ctx, mm, id).await
 	}
 }
