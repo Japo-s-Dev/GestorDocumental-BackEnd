@@ -7,7 +7,7 @@ use crate::core::model::base::ListResult;
 use crate::core::model::document::{Document, DocumentBmc};
 use crate::core::model::index::IndexFilter;
 use crate::core::model::search_operations::{
-	ArchiveIndexFilter, EventWithUsername, IndexWithDatatype, SearchBmc,
+	ArchiveIndexFilter, IndexWithDatatype, SearchBmc,
 };
 use crate::core::model::separator::{Separator, SeparatorBmc};
 use crate::core::model::ModelManager;
@@ -53,23 +53,7 @@ pub async fn search_archives(
 
 	Ok(archives)
 }
-/*
-pub async fn get_events_with_filters(
-	ctx: Ctx,
-	mm: ModelManager,
-	params: ParamsList<ArchiveEventFilter>,
-) -> Result<Vec<EventWithUsername>> {
-	let events = SearchBmc::get_events_with_filters(
-		&ctx,
-		&mm,
-		params.filters,
-		params.list_options,
-	)
-	.await?;
 
-	Ok(events)
-}
-*/
 pub fn build_tree(
 	parent_name: String,
 	parent_id: Option<i64>,

@@ -1,26 +1,45 @@
 use crate::core::ctx::Ctx;
 use crate::core::model::base::{self, DbBmc};
+use crate::core::model::idens::*;
 use crate::core::model::modql_utils::time_to_sea_value;
 use crate::core::model::ModelManager;
 use crate::core::model::Result;
 use crate::utils::time::Rfc3339;
 use modql::field::{Fields, HasFields};
 use modql::filter::{
-	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
+	FilterGroups, FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
 };
+use sea_query::{Condition, Expr, PostgresQueryBuilder, Query};
+use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
-use sqlx::FromRow;
+use sqlx::{FromRow, Row};
 
-use super::base::ListResult;
+use super::base::compute_list_options;
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Event {
 	pub id: i64,
 	pub user_id: i64,
+	pub action: String,
+	pub object: String,
+	pub object_id: i64,
+
+	#[serde_as(as = "Rfc3339")]
+	pub timestamp: OffsetDateTime,
+	pub old_data: Option<serde_json::Value>,
+	pub new_data: Option<serde_json::Value>,
+	pub additional_info: Option<serde_json::Value>,
+}
+
+#[serde_as]
+#[derive(Clone, Fields, FromRow, Debug, Serialize)]
+pub struct EventWithUsername {
+	pub id: i64,
+	pub username: String,
 	pub action: String,
 	pub object: String,
 	pub object_id: i64,
@@ -40,7 +59,7 @@ impl EventBy for Event {}
 #[derive(FilterNodes, Deserialize, Default, Debug)]
 pub struct EventFilter {
 	id: Option<OpValsInt64>,
-	user_id: Option<OpValsInt64>,
+	username: Option<OpValsString>,
 	action: Option<OpValsString>,
 	object: Option<OpValsString>,
 	object_id: Option<OpValsInt64>,
@@ -76,14 +95,67 @@ impl EventBmc {
 		Ok(comment_id)
 	}
 	*/
-	pub async fn list(
-		ctx: &Ctx,
+	pub async fn list<F>(
+		_ctx: &Ctx,
 		mm: &ModelManager,
-		filters: Option<Vec<EventFilter>>,
+		filters: Option<F>,
 		list_options: Option<ListOptions>,
-	) -> Result<ListResult<Event>> {
-		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
+	) -> Result<Vec<EventWithUsername>>
+	where
+		F: Into<FilterGroups>,
+	{
+		let db = mm.db();
+
+		let mut query = Query::select();
+		query
+			.columns([
+				(EventIden::Table, EventIden::Id),
+				(EventIden::Table, EventIden::Action),
+				(EventIden::Table, EventIden::Object),
+				(EventIden::Table, EventIden::ObjectId),
+				(EventIden::Table, EventIden::Timestamp),
+				(EventIden::Table, EventIden::OldData),
+				(EventIden::Table, EventIden::NewData),
+				(EventIden::Table, EventIden::AdditionalInfo),
+			])
+			.column((UserIden::Table, UserIden::Username))
+			.from(EventIden::Table)
+			.inner_join(
+				UserIden::Table,
+				Expr::col((EventIden::Table, EventIden::UserId))
+					.equals((UserIden::Table, UserIden::Id)),
+			);
+
+		if let Some(filters) = filters {
+			let filter_groups: FilterGroups = filters.into();
+			let condition: Condition = filter_groups.try_into()?;
+			query.cond_where(condition);
+		}
+
+		let list_options = compute_list_options(list_options)?;
+		list_options.apply_to_sea_query(&mut query);
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+
+		let rows = sqlx::query_with(&sql, values).fetch_all(db).await?;
+
+		let events = rows
+			.iter()
+			.map(|row| EventWithUsername {
+				id: row.get("id"),
+				username: row.get("username"),
+				action: row.get("action"),
+				object: row.get("object"),
+				object_id: row.get("object_id"),
+				timestamp: row.get("timestamp"),
+				old_data: row.get("old_data"),
+				new_data: row.get("new_data"),
+				additional_info: row.get("additional_info"),
+			})
+			.collect();
+
+		Ok(events)
 	}
+
 	/*
 	pub async fn update(
 		ctx: &Ctx,
