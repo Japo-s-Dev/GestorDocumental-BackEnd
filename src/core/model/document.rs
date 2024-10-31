@@ -17,6 +17,7 @@ use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
 use super::base::ListResult;
+use super::idens::DocumentIden;
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
@@ -41,6 +42,11 @@ pub struct Document {
 pub struct DocumentForRequest {
 	pub separator_id: i64,
 	pub name: Option<String>,
+}
+
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct DocumentForRename {
+	pub name: String,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
@@ -111,11 +117,6 @@ pub struct DocumentFilter {
 	mtime: Option<OpValsValue>,
 }
 
-#[derive(Iden)]
-enum DocumentIden {
-	ArchiveId,
-}
-
 pub struct DocumentBmc;
 
 impl DbBmc for DocumentBmc {
@@ -177,6 +178,29 @@ impl DocumentBmc {
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
 		base::delete::<Self>(ctx, mm, id).await
+	}
+
+	pub async fn rename(
+		ctx: &Ctx,
+		mm: &ModelManager,
+		id: i64,
+		new_name: String,
+	) -> Result<()> {
+		let db = mm.db();
+
+		let mut query = Query::update();
+		query
+			.table(Self::table_ref())
+			.value(DocumentIden::Name, new_name)
+			.and_where(Expr::col(DocumentIden::Id).eq(id));
+
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+		let _count = sqlx::query_with(&sql, values)
+			.execute(db)
+			.await?
+			.rows_affected();
+
+		Ok(())
 	}
 
 	pub async fn get_documents_by_archive<E>(
