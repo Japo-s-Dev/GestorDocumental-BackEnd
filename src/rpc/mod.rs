@@ -192,6 +192,7 @@ pub async fn exec_rpc(
 			exec_rpc_fn!(update_document, ctx, mm, rpc_params, file, false)
 		}
 		"delete_document" => exec_rpc_fn!(delete_document, ctx, mm, rpc_params),
+		"rename_document" => exec_rpc_fn!(rename_document, ctx, mm, rpc_params),
 
 		// document comment crud
 		"create_document_comment" => {

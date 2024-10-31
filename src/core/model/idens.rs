@@ -16,6 +16,15 @@ pub enum EventIden {
 }
 
 #[derive(Iden)]
+pub enum DocumentIden {
+	#[iden = "document"]
+	Table,
+	Id,
+	Name,
+	ArchiveId,
+}
+
+#[derive(Iden)]
 pub enum UserIden {
 	#[iden = "user"]
 	Table,
