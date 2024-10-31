@@ -20,6 +20,7 @@ const LIST_LIMIT_MAX: i64 = 5000;
 #[derive(Iden)]
 pub enum CommonIden {
 	Id,
+	IsDeleted,
 }
 
 #[derive(Iden)]
@@ -235,6 +236,38 @@ where
 }
 
 pub async fn delete<MC>(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
+where
+	MC: DbBmc,
+{
+	let db = mm.db();
+
+	let mut query = Query::update();
+	query
+		.table(MC::table_ref())
+		.value(CommonIden::IsDeleted, true)
+		.and_where(Expr::col(CommonIden::Id).eq(id));
+
+	let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+	let count = sqlx::query_with(&sql, values)
+		.execute(db)
+		.await?
+		.rows_affected();
+
+	if count == 0 {
+		Err(Error::EntityNotFound {
+			entity: MC::TABLE,
+			id,
+		})
+	} else {
+		Ok(())
+	}
+}
+
+pub async fn phisical_delete<MC>(
+	_ctx: &Ctx,
+	mm: &ModelManager,
+	id: i64,
+) -> Result<()>
 where
 	MC: DbBmc,
 {

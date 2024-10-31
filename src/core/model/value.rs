@@ -140,6 +140,6 @@ impl ValueBmc {
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
-		base::delete::<Self>(ctx, mm, id).await
+		base::phisical_delete::<Self>(ctx, mm, id).await
 	}
 }
