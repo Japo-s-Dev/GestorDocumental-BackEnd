@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS
         id BIGSERIAL NOT NULL PRIMARY KEY,
         role_name VARCHAR(50) NOT NULL,
         privilege_id BIGINT NOT NULL,
-        is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+        is_enabled BOOLEAN NOT NULL DEFAULT FALSE,
         cid bigint NOT NULL,
         ctime timestamp with time zone NOT NULL default now(),
         mid bigint NOT NULL,

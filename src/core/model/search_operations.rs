@@ -54,6 +54,7 @@ pub struct SearchBmc;
 impl DbBmc for SearchBmc {
 	const TABLE: &'static str = "index";
 	const TIMESTAMPED: bool = false;
+	const SOFTDELETED: bool = false;
 }
 
 impl SearchBmc {

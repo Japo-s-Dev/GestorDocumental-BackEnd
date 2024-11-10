@@ -1,7 +1,7 @@
 use crate::core::ctx::Ctx;
 use crate::core::model::base::{self, DbBmc};
 use crate::core::model::ModelManager;
-use crate::core::model::Result;
+use crate::core::model::{Error, Result};
 use modql::field::{Fields, HasFields};
 use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsString};
 use sea_query::{Expr, Iden, PostgresQueryBuilder, Query};
@@ -12,6 +12,7 @@ use sqlx::postgres::PgRow;
 use sqlx::FromRow;
 
 use super::base::ListResult;
+use super::idens::AssociatedPrivilegeIden;
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
@@ -48,20 +49,12 @@ pub struct AssociatedPrivilegeFilter {
 	pub privilege_id: Option<OpValsInt64>,
 }
 
-#[derive(Iden)]
-pub enum AssociatedPrivilegeIden {
-	#[iden = "associated_privilege"]
-	Table,
-	Id,
-	RoleName,
-	PrivilegeId,
-}
-
 pub struct AssociatedPrivilegeBmc;
 
 impl DbBmc for AssociatedPrivilegeBmc {
 	const TABLE: &'static str = "assosiated_privilege";
 	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = false;
 }
 
 impl AssociatedPrivilegeBmc {
@@ -122,7 +115,57 @@ impl AssociatedPrivilegeBmc {
 		base::update::<Self, _>(ctx, mm, id, datatype_u).await
 	}
 
+	pub async fn enable(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
+		let db = mm.db();
+
+		let mut query = Query::update();
+		query
+			.table(Self::table_ref())
+			.value(AssociatedPrivilegeIden::IsEnabled, true)
+			.and_where(Expr::col(AssociatedPrivilegeIden::Id).eq(id));
+
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+		let count = sqlx::query_with(&sql, values)
+			.execute(db)
+			.await?
+			.rows_affected();
+
+		if count == 0 {
+			Err(Error::EntityNotFound {
+				entity: Self::TABLE,
+				id,
+			})
+		} else {
+			Ok(())
+		}
+	}
+
+	pub async fn disable(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
+		let db = mm.db();
+
+		let mut query = Query::update();
+		query
+			.table(Self::table_ref())
+			.value(AssociatedPrivilegeIden::IsEnabled, true)
+			.and_where(Expr::col(AssociatedPrivilegeIden::Id).eq(id));
+
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+		let count = sqlx::query_with(&sql, values)
+			.execute(db)
+			.await?
+			.rows_affected();
+
+		if count == 0 {
+			Err(Error::EntityNotFound {
+				entity: Self::TABLE,
+				id,
+			})
+		} else {
+			Ok(())
+		}
+	}
+
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
-		base::phisical_delete::<Self>(ctx, mm, id).await
+		base::delete::<Self>(ctx, mm, id).await
 	}
 }
