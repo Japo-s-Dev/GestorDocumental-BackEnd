@@ -91,6 +91,7 @@ pub struct ValueBmc;
 impl DbBmc for ValueBmc {
 	const TABLE: &'static str = "value";
 	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = false;
 }
 
 impl ValueBmc {
@@ -140,6 +141,6 @@ impl ValueBmc {
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
-		base::phisical_delete::<Self>(ctx, mm, id).await
+		base::delete::<Self>(ctx, mm, id).await
 	}
 }

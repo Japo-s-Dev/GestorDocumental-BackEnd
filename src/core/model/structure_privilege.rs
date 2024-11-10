@@ -54,6 +54,7 @@ pub struct StructurePrivilegeBmc;
 impl DbBmc for StructurePrivilegeBmc {
 	const TABLE: &'static str = "structure_privilege";
 	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = false;
 }
 
 impl StructurePrivilegeBmc {
@@ -114,6 +115,6 @@ impl StructurePrivilegeBmc {
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
-		base::phisical_delete::<Self>(ctx, mm, id).await
+		base::delete::<Self>(ctx, mm, id).await
 	}
 }

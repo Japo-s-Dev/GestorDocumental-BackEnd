@@ -54,6 +54,7 @@ pub struct AssociatedPrivilegeBmc;
 impl DbBmc for AssociatedPrivilegeBmc {
 	const TABLE: &'static str = "assosiated_privilege";
 	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = false;
 }
 
 impl AssociatedPrivilegeBmc {
@@ -165,6 +166,6 @@ impl AssociatedPrivilegeBmc {
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
-		base::phisical_delete::<Self>(ctx, mm, id).await
+		base::delete::<Self>(ctx, mm, id).await
 	}
 }

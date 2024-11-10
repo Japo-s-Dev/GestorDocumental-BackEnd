@@ -235,8 +235,7 @@ where
 		Ok(())
 	}
 }
-
-pub async fn delete<MC>(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
+async fn soft_delete<MC>(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
 where
 	MC: DbBmc,
 {
@@ -264,11 +263,7 @@ where
 	}
 }
 
-pub async fn phisical_delete<MC>(
-	_ctx: &Ctx,
-	mm: &ModelManager,
-	id: i64,
-) -> Result<()>
+async fn phisical_delete<MC>(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
 where
 	MC: DbBmc,
 {
@@ -292,6 +287,17 @@ where
 		})
 	} else {
 		Ok(())
+	}
+}
+
+pub async fn delete<MC>(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
+where
+	MC: DbBmc,
+{
+	if MC::SOFTDELETED {
+		soft_delete::<MC>(ctx, mm, id).await
+	} else {
+		phisical_delete::<MC>(ctx, mm, id).await
 	}
 }
 

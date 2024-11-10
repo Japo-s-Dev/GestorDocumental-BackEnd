@@ -41,6 +41,7 @@ pub struct DatatypeBmc;
 impl DbBmc for DatatypeBmc {
 	const TABLE: &'static str = "datatype";
 	const TIMESTAMPED: bool = false;
+	const SOFTDELETED: bool = false;
 	const SCHEMA: Option<&'static str> = Some("consts");
 }
 
@@ -78,6 +79,6 @@ impl DatatypeBmc {
 	}
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
-		base::phisical_delete::<Self>(ctx, mm, id).await
+		base::delete::<Self>(ctx, mm, id).await
 	}
 }
