@@ -270,6 +270,12 @@ pub async fn exec_rpc(
 		"delete_associated_privilege" => {
 			exec_rpc_fn!(delete_associated_privilege, ctx, mm, rpc_params)
 		}
+		"enable_associated_privilege" => {
+			exec_rpc_fn!(enable_associated_privilege, ctx, mm, rpc_params)
+		}
+		"disable_associated_privilege" => {
+			exec_rpc_fn!(disable_associated_privilege, ctx, mm, rpc_params)
+		}
 
 		// -- Fallback error
 		_ => return Err(Error::RpcMethodUnknown(rpc_method)),

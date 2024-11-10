@@ -41,6 +41,7 @@ pub trait DbBmc {
 	const TABLE: &'static str;
 	const SCHEMA: Option<&'static str> = None;
 	const TIMESTAMPED: bool;
+	const SOFTDELETED: bool;
 
 	fn table_ref() -> TableRef {
 		match Self::SCHEMA {

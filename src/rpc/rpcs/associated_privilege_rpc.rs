@@ -85,3 +85,29 @@ pub async fn delete_associated_privilege(
 
 	Ok(association)
 }
+
+pub async fn enable_associated_privilege(
+	ctx: Ctx,
+	mm: ModelManager,
+	params: ParamsIded,
+) -> Result<AssociatedPrivilege> {
+	let ParamsIded { id } = params;
+
+	AssociatedPrivilegeBmc::enable(&ctx, &mm, id).await?;
+	let association = AssociatedPrivilegeBmc::get(&ctx, &mm, id).await?;
+
+	Ok(association)
+}
+
+pub async fn disable_associated_privilege(
+	ctx: Ctx,
+	mm: ModelManager,
+	params: ParamsIded,
+) -> Result<AssociatedPrivilege> {
+	let ParamsIded { id } = params;
+
+	AssociatedPrivilegeBmc::disable(&ctx, &mm, id).await?;
+	let association = AssociatedPrivilegeBmc::get(&ctx, &mm, id).await?;
+
+	Ok(association)
+}

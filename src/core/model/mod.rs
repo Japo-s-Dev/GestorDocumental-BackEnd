@@ -19,6 +19,7 @@ pub mod search_operations;
 pub mod separator;
 mod store;
 pub mod structure;
+pub mod structure_privilege;
 pub mod user;
 pub mod value;
 
