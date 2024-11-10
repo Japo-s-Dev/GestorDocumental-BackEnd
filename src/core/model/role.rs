@@ -69,6 +69,7 @@ enum RoleIden {
 impl DbBmc for RoleBmc {
 	const TABLE: &'static str = "role";
 	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = true;
 }
 
 impl RoleBmc {

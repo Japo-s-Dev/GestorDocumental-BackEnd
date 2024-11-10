@@ -50,3 +50,30 @@ pub enum DatatypeIden {
 	Id,
 	DatatypeName,
 }
+
+#[derive(Iden)]
+pub enum AssociatedPrivilegeIden {
+	#[iden = "associated_privilege"]
+	Table,
+	Id,
+	RoleName,
+	PrivilegeId,
+	IsEnabled,
+}
+
+#[derive(Iden)]
+pub enum StructurePrivilegeIden {
+	#[iden = "structure_privilege"]
+	Table,
+	Id,
+	UserId,
+	ProjectId,
+}
+
+#[derive(Iden)]
+pub enum StructureIden {
+	#[iden = "structure"]
+	Table,
+	Id,
+	ProjectName,
+}

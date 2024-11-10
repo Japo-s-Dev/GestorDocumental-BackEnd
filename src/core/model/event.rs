@@ -72,6 +72,7 @@ pub struct EventBmc;
 impl DbBmc for EventBmc {
 	const TABLE: &'static str = "event";
 	const TIMESTAMPED: bool = false;
+	const SOFTDELETED: bool = false;
 }
 
 impl EventBmc {

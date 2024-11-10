@@ -70,6 +70,7 @@ pub struct DocumentCommentBmc;
 impl DbBmc for DocumentCommentBmc {
 	const TABLE: &'static str = "document_comment";
 	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = true;
 }
 
 impl DocumentCommentBmc {

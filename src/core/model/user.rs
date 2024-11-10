@@ -120,6 +120,7 @@ pub struct UserBmc;
 impl DbBmc for UserBmc {
 	const TABLE: &'static str = "user";
 	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = true;
 }
 
 impl UserBmc {

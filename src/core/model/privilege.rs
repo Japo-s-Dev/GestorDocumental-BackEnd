@@ -44,6 +44,7 @@ pub struct PrivilegeBmc;
 impl DbBmc for PrivilegeBmc {
 	const TABLE: &'static str = "privilege";
 	const TIMESTAMPED: bool = false;
+	const SOFTDELETED: bool = false;
 	const SCHEMA: Option<&'static str> = Some("consts");
 }
 
