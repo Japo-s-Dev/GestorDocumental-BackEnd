@@ -8,7 +8,7 @@ use modql::field::{Fields, HasFields};
 use modql::filter::{
 	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
 };
-use sea_query::{Expr, Iden, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -182,7 +182,7 @@ impl DocumentBmc {
 	}
 
 	pub async fn rename(
-		ctx: &Ctx,
+		_ctx: &Ctx,
 		mm: &ModelManager,
 		id: i64,
 		new_name: String,
