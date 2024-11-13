@@ -10,6 +10,7 @@ pub mod privilege_rpc;
 pub mod role_rpc;
 pub mod search_operations_rpc;
 pub mod separator_rpc;
+pub mod structure_privilege;
 pub mod structure_rpc;
 pub mod user_rpc;
 pub mod value_rpc;

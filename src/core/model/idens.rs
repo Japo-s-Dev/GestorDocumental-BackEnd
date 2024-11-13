@@ -1,6 +1,12 @@
 use sea_query::Iden;
 
 #[derive(Iden)]
+pub enum CommonIden {
+	Id,
+	IsDeleted,
+}
+
+#[derive(Iden)]
 pub enum EventIden {
 	#[iden = "event"]
 	Table,
@@ -22,6 +28,13 @@ pub enum DocumentIden {
 	Id,
 	Name,
 	ArchiveId,
+}
+
+#[derive(Iden)]
+enum RoleIden {
+	Id,
+	RoleName,
+	Pwd,
 }
 
 #[derive(Iden)]
@@ -68,6 +81,7 @@ pub enum StructurePrivilegeIden {
 	Id,
 	UserId,
 	ProjectId,
+	IsEnabled,
 }
 
 #[derive(Iden)]
@@ -76,4 +90,5 @@ pub enum StructureIden {
 	Table,
 	Id,
 	ProjectName,
+	IsDeleted,
 }

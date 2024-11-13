@@ -76,6 +76,7 @@ impl DbBmc for EventBmc {
 }
 
 impl EventBmc {
+	#[allow(unused)]
 	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Event> {
 		base::get::<Self, _>(ctx, mm, id).await
 	}

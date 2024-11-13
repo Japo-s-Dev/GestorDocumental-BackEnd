@@ -14,14 +14,10 @@ use serde::Serialize;
 use sqlx::postgres::PgRow;
 use sqlx::{FromRow, Row};
 
+use super::idens::CommonIden;
+
 const LIST_LIMIT_DEFAULT: i64 = 1000;
 const LIST_LIMIT_MAX: i64 = 5000;
-
-#[derive(Iden)]
-pub enum CommonIden {
-	Id,
-	IsDeleted,
-}
 
 #[derive(Iden)]
 pub enum TimestampIden {
@@ -160,6 +156,10 @@ where
 		let filters: FilterGroups = filter.into();
 		let cond: Condition = filters.try_into()?;
 		base_query.cond_where(cond);
+	}
+
+	if MC::SOFTDELETED {
+		base_query.and_where(Expr::col(CommonIden::IsDeleted).eq(false));
 	}
 
 	// Clone the base query for counting
