@@ -8,8 +8,6 @@ use modql::field::{Fields, HasFields};
 use modql::filter::{
 	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
 };
-use sea_query::{Expr, Iden, PostgresQueryBuilder, Query};
-use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::postgres::PgRow;
@@ -57,13 +55,6 @@ pub struct RoleFilter {
 	mid: Option<OpValsInt64>,
 	#[modql(to_sea_value_fn = "time_to_sea_value")]
 	mtime: Option<OpValsValue>,
-}
-
-#[derive(Iden)]
-enum RoleIden {
-	Id,
-	RoleName,
-	Pwd,
 }
 
 impl DbBmc for RoleBmc {

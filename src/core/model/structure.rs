@@ -8,10 +8,7 @@ use modql::field::{Fields, HasFields};
 use modql::filter::{
 	FilterGroups, FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
 };
-use sea_query::{
-	Alias, Asterisk, Condition, ConditionalStatement, Expr, PostgresQueryBuilder,
-	Query,
-};
+use sea_query::{Alias, Asterisk, Condition, Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -114,6 +111,10 @@ impl StructureBmc {
 			let filters: FilterGroups = filter.into();
 			let cond: Condition = filters.try_into()?;
 			base_query.cond_where(cond);
+		}
+
+		if Self::SOFTDELETED {
+			base_query.and_where(Expr::col(StructureIden::IsDeleted).eq(false));
 		}
 
 		let mut count_query = Query::select();

@@ -107,6 +107,7 @@ impl DocumentCommentBmc {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 
+	#[allow(unused)]
 	pub async fn update(
 		ctx: &Ctx,
 		mm: &ModelManager,
@@ -116,6 +117,7 @@ impl DocumentCommentBmc {
 		base::update::<Self, _>(ctx, mm, id, comment_u).await
 	}
 
+	#[allow(unused)]
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
 		base::delete::<Self>(ctx, mm, id).await
 	}

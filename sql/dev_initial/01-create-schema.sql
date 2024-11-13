@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS
         role_name VARCHAR(50) NOT NULL,
         privilege_id BIGINT NOT NULL,
         is_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+        is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
         cid bigint NOT NULL,
         ctime timestamp with time zone NOT NULL default now(),
         mid bigint NOT NULL,
@@ -204,6 +205,7 @@ CREATE TABLE IF NOT EXISTS
         project_id BIGINT,
         role_name VARCHAR(50),
         is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+        is_enabled BOOLEAN NOT NULL DEFAULT FALSE,
         cid bigint NOT NULL,
         ctime timestamp with time zone NOT NULL default now(),
         mid bigint NOT NULL,
@@ -243,7 +245,7 @@ CREATE TABLE IF NOT EXISTS public.event (
 CREATE OR REPLACE FUNCTION log_event()
 RETURNS TRIGGER AS $$
 DECLARE
-    action_text VARCHAR(10);
+    action_text VARCHAR(20);
     user_id BIGINT;
 BEGIN
     IF TG_OP = 'INSERT' THEN
@@ -327,3 +329,123 @@ BEGIN
     END LOOP;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION associate_role_with_privileges()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Insert an entry in associated_privilege for each existing privilege only if it does not already exist
+    INSERT INTO public.assosiated_privilege (role_name, privilege_id, is_deleted, cid, ctime, mid, mtime)
+    SELECT NEW.role_name, p.id, FALSE, NEW.cid, now(), NEW.cid, now()
+    FROM consts.privilege p
+    WHERE NOT EXISTS (
+        SELECT 1 FROM public.assosiated_privilege ap
+        WHERE ap.role_name = NEW.role_name AND ap.privilege_id = p.id
+    );
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER role_privilege_association
+AFTER INSERT ON public.role
+FOR EACH ROW
+EXECUTE FUNCTION associate_role_with_privileges();
+
+CREATE OR REPLACE FUNCTION associate_privilege_with_roles()
+RETURNS TRIGGER AS $$
+DECLARE
+    creator_id BIGINT := 1;  -- Replace with a default user ID if no `cid` is available
+BEGIN
+    -- Insert an entry in associated_privilege for each existing role only if it does not already exist
+    INSERT INTO public.assosiated_privilege (role_name, privilege_id, is_deleted, cid, ctime, mid, mtime)
+    SELECT r.role_name, NEW.id, FALSE, creator_id, now(), creator_id, now()
+    FROM public.role r
+    WHERE NOT EXISTS (
+        SELECT 1 FROM public.assosiated_privilege ap
+        WHERE ap.role_name = r.role_name AND ap.privilege_id = NEW.id
+    );
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER privilege_role_association
+AFTER INSERT ON consts.privilege
+FOR EACH ROW
+EXECUTE FUNCTION associate_privilege_with_roles();
+
+
+CREATE OR REPLACE FUNCTION associate_user_with_structures()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Insert an entry in structure_privilege for each existing structure when a new user is created,
+    -- only if the association does not already exist
+    INSERT INTO public.structure_privilege (project_id, user_id, is_enabled, is_deleted, cid, ctime, mid, mtime)
+    SELECT s.id, NEW.id, TRUE, FALSE, NEW.id, now(), NEW.id, now()
+    FROM public.structure s
+    WHERE NOT EXISTS (
+        SELECT 1 FROM public.structure_privilege sp
+        WHERE sp.project_id = s.id AND sp.user_id = NEW.id
+    );
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER user_structure_association
+AFTER INSERT ON public."user"
+FOR EACH ROW
+EXECUTE FUNCTION associate_user_with_structures();
+
+CREATE OR REPLACE FUNCTION associate_structure_with_users()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Insert an entry in structure_privilege for each existing user when a new structure is created,
+    -- only if the association does not already exist
+    INSERT INTO public.structure_privilege (project_id, user_id, is_enabled, is_deleted,  cid, ctime, mid, mtime)
+    SELECT NEW.id, u.id, TRUE, FALSE, NEW.cid, now(), NEW.cid, now()
+    FROM public."user" u
+    WHERE NOT EXISTS (
+        SELECT 1 FROM public.structure_privilege sp
+        WHERE sp.project_id = NEW.id AND sp.user_id = u.id
+    );
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER structure_user_association
+AFTER INSERT ON public.structure
+FOR EACH ROW
+EXECUTE FUNCTION associate_structure_with_users();
+
+CREATE OR REPLACE FUNCTION enforce_admin_privilege()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Force `is_deleted` to TRUE if `role_name` is 'ADMIN'
+    IF NEW.role_name = 'ADMIN' THEN
+        NEW.is_deleted := TRUE;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION enforce_admin_structure_privilege()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Check if the user being inserted/updated has the "ADMIN" role
+    IF (SELECT assigned_role FROM public."user" WHERE id = NEW.user_id) = 'ADMIN' THEN
+        NEW.is_enabled := TRUE;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply the trigger before insert or update
+CREATE TRIGGER enforce_admin_structure_privilege_trigger
+BEFORE INSERT OR UPDATE ON public.structure_privilege
+FOR EACH ROW
+EXECUTE FUNCTION enforce_admin_structure_privilege();
+
