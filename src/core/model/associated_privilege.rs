@@ -20,6 +20,7 @@ pub struct AssociatedPrivilege {
 	pub id: i64,
 	pub role_name: String,
 	pub privilege_id: i64,
+	pub is_enabled: bool,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]

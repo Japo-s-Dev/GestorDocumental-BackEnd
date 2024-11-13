@@ -202,10 +202,11 @@ CREATE TABLE IF NOT EXISTS
 DROP TABLE IF EXISTS public.structure_privilege cascade;
 CREATE TABLE IF NOT EXISTS
     public.structure_privilege (
+        id BIGSERIAL PRIMARY KEY,
         project_id BIGINT,
         role_name VARCHAR(50),
+        is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
         is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
-        is_enabled BOOLEAN NOT NULL DEFAULT FALSE,
         cid bigint NOT NULL,
         ctime timestamp with time zone NOT NULL default now(),
         mid bigint NOT NULL,
@@ -217,8 +218,10 @@ CREATE TABLE IF NOT EXISTS
 DROP TABLE IF EXISTS public.separator_privilege cascade;
 CREATE TABLE IF NOT EXISTS
     public.separator_privilege (
+        id BIGSERIAL PRIMARY KEY,
         separator_id BIGINT,
         role_name VARCHAR(50),
+        is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
         is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
         cid bigint NOT NULL,
         ctime timestamp with time zone NOT NULL default now(),
@@ -374,7 +377,6 @@ AFTER INSERT ON consts.privilege
 FOR EACH ROW
 EXECUTE FUNCTION associate_privilege_with_roles();
 
-
 CREATE OR REPLACE FUNCTION associate_user_with_structures()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -431,6 +433,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Apply the trigger before insert or update
+CREATE TRIGGER enforce_admin_privilege_trigger
+BEFORE INSERT OR UPDATE ON public.assosiated_privilege
+FOR EACH ROW
+EXECUTE FUNCTION enforce_admin_privilege();
+
 CREATE OR REPLACE FUNCTION enforce_admin_structure_privilege()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -448,4 +456,5 @@ CREATE TRIGGER enforce_admin_structure_privilege_trigger
 BEFORE INSERT OR UPDATE ON public.structure_privilege
 FOR EACH ROW
 EXECUTE FUNCTION enforce_admin_structure_privilege();
+
 
