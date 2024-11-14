@@ -68,3 +68,64 @@ pub async fn delete_archive(
 
 	Ok(archive)
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::ctx::Ctx;
+    use crate::core::model::ModelManager;
+    use crate::rpc::params::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
+    use crate::core::model::archive::{Archive, ArchiveForCreate, ArchiveForUpdate};
+
+    // Mock data to directly use in tests
+    fn get_mock_ctx() -> Ctx {
+        Ctx::root_ctx()  // Assuming default or empty initializer is valid
+    }
+
+	fn get_mock_model_manager() -> ModelManager {
+		todo!()  // Assuming default or empty initializer is valid
+	}
+
+    fn get_mock_params_ided() -> ParamsIded {
+        ParamsIded { id: 1 }  // Simple mock data
+    }
+
+    fn get_mock_params_for_update() -> ParamsForUpdate<ArchiveForUpdate> {
+        ParamsForUpdate {
+            id: 1,
+            data: ArchiveForUpdate { tag: todo!() },  // Assuming a simple default or empty initializer is valid
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_archive() {
+        let ctx = get_mock_ctx();
+        let mm = get_mock_model_manager();
+        let params = get_mock_params_ided();
+
+        // Assuming the get_archive function exists and operates on these mocks correctly
+        let result = get_archive(ctx, mm, params).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_update_archive() {
+        let ctx = get_mock_ctx();
+        let mm = get_mock_model_manager();
+        let params = get_mock_params_for_update();
+
+        // Assuming the update_archive function exists and operates on these mocks correctly
+        let result = update_archive(ctx, mm, params).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_delete_archive() {
+        let ctx = get_mock_ctx();
+        let mm = get_mock_model_manager();
+        let params = get_mock_params_ided();
+
+        // Assuming the delete_archive function exists and operates on these mocks correctly
+        let result = delete_archive(ctx, mm, params).await;
+        assert!(result.is_ok());
+    }
+}
