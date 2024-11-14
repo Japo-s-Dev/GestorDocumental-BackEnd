@@ -82,3 +82,70 @@ async fn main() -> Result<()> {
 
 	Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use axum::Router;
+    use tower::ServiceExt; // for `oneshot`
+    use tower_http::cors::CorsLayer;
+
+    // Mock function to initialize ModelManager
+    async fn get_mock_model_manager() -> ModelManager {
+        ModelManager::new().await.expect("Failed to create ModelManager")
+    }
+
+    #[tokio::test]
+    async fn test_server_initialization() {
+        // Initialize the mock ModelManager
+        let mm = get_mock_model_manager().await;
+
+        // Set up routes as defined in main
+        let routes_rpc = routes_rpc::routes(mm.clone())
+            .route_layer(middleware::from_fn(mw_ctx_require));
+
+        let routes_all = Router::new()
+            .merge(routes_login::routes(mm.clone()))
+            .nest("/api", routes_rpc)
+            .layer(middleware::map_response(mw_reponse_map))
+            .layer(CorsLayer::permissive()) // Simplified CORS for testing
+            .layer(middleware::from_fn_with_state(mm.clone(), mw_ctx_resolve))
+            .layer(CookieManagerLayer::new());
+
+        // Create a test server request with an empty body
+        let response = routes_all
+            .oneshot(Request::builder().uri("/api").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        // Check if the server responds with the expected status code
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_cors_headers() {
+        // Set up CORS and server routes
+        let cors = CorsLayer::permissive(); // Use permissive CORS for testing
+        let mm = get_mock_model_manager().await;
+        let routes_all = Router::new()
+            .merge(routes_login::routes(mm.clone()))
+            .layer(cors);
+
+        // Send a preflight request to test CORS headers
+        let request = Request::builder()
+            .method("OPTIONS")
+            .uri("/api")
+            .header("Origin", "http://localhost:3400")
+            .header("Access-Control-Request-Method", "POST")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = routes_all.oneshot(request).await.unwrap();
+
+        // Check if CORS headers are set
+        assert_eq!(response.status(), StatusCode::OK);
+        assert!(response.headers().contains_key("access-control-allow-origin"));
+    }
+}
