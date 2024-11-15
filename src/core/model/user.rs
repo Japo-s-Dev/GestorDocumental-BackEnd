@@ -18,6 +18,8 @@ use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 use uuid::Uuid;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct User {
@@ -70,6 +72,7 @@ pub struct UserForLogin {
 pub struct UserForAuth {
 	pub id: i64,
 	pub username: String,
+	pub assigned_role: String,
 
 	// -- token info
 	pub token_salt: Uuid,
@@ -116,6 +119,8 @@ pub struct UserBmc;
 
 impl DbBmc for UserBmc {
 	const TABLE: &'static str = "user";
+	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = true;
 }
 
 impl UserBmc {
@@ -207,7 +212,7 @@ impl UserBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<UserFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<User>> {
+	) -> Result<ListResult<User>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 

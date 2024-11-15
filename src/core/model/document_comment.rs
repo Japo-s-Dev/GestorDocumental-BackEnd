@@ -12,6 +12,8 @@ use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct DocumentComment {
@@ -53,7 +55,7 @@ impl DocumentCommentBy for DocumentCommentForOp {}
 pub struct DocumentCommentFilter {
 	id: Option<OpValsInt64>,
 
-	archive_id: Option<OpValsInt64>,
+	document_id: Option<OpValsInt64>,
 	user_id: Option<OpValsInt64>,
 	cid: Option<OpValsInt64>,
 	#[modql(to_sea_value_fn = "time_to_sea_value")]
@@ -66,7 +68,9 @@ pub struct DocumentCommentFilter {
 pub struct DocumentCommentBmc;
 
 impl DbBmc for DocumentCommentBmc {
-	const TABLE: &'static str = "comment";
+	const TABLE: &'static str = "document_comment";
+	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = true;
 }
 
 impl DocumentCommentBmc {
@@ -99,10 +103,11 @@ impl DocumentCommentBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<DocumentCommentFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<DocumentComment>> {
+	) -> Result<ListResult<DocumentComment>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 
+	#[allow(unused)]
 	pub async fn update(
 		ctx: &Ctx,
 		mm: &ModelManager,
@@ -112,6 +117,7 @@ impl DocumentCommentBmc {
 		base::update::<Self, _>(ctx, mm, id, comment_u).await
 	}
 
+	#[allow(unused)]
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
 		base::delete::<Self>(ctx, mm, id).await
 	}

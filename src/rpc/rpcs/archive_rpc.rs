@@ -2,6 +2,7 @@ use crate::core::ctx::Ctx;
 use crate::core::model::archive::{
 	Archive, ArchiveBmc, ArchiveFilter, ArchiveForCreate, ArchiveForUpdate,
 };
+use crate::core::model::base::ListResult;
 use crate::core::model::ModelManager;
 use crate::rpc::params::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
 use crate::rpc::Result;
@@ -23,7 +24,7 @@ pub async fn list_archives(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<ArchiveFilter>,
-) -> Result<Vec<Archive>> {
+) -> Result<ListResult<Archive>> {
 	let archives =
 		ArchiveBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
 

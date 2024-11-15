@@ -6,13 +6,18 @@ use crate::core::model::Result;
 use crate::utils::time::Rfc3339;
 use modql::field::{Fields, HasFields};
 use modql::filter::{
-	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
+	FilterGroups, FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
 };
+use sea_query::{Alias, Asterisk, Condition, Expr, PostgresQueryBuilder, Query};
+use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
-use sqlx::FromRow;
+use sqlx::{FromRow, Row};
+
+use super::base::{compute_list_options, ListResult};
+use super::idens::{StructureIden, StructurePrivilegeIden};
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
@@ -57,6 +62,8 @@ pub struct StructureFilter {
 
 impl DbBmc for StructureBmc {
 	const TABLE: &'static str = "structure";
+	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = true;
 }
 
 impl StructureBmc {
@@ -79,8 +86,62 @@ impl StructureBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<StructureFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Structure>> {
-		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
+	) -> Result<ListResult<Structure>> {
+		let db = mm.db();
+
+		// Build the base query
+		let mut base_query = Query::select();
+		base_query
+			.from(Self::table_ref())
+			.columns(Structure::field_column_refs())
+			.and_where(
+				Expr::col(StructureIden::Id).in_subquery(
+					Query::select()
+						.from(StructurePrivilegeIden::Table)
+						.column(StructurePrivilegeIden::ProjectId)
+						.and_where(
+							Expr::col(StructurePrivilegeIden::UserId)
+								.eq(ctx.user_id()),
+						)
+						.take(),
+				),
+			);
+
+		if let Some(filter) = filters {
+			let filters: FilterGroups = filter.into();
+			let cond: Condition = filters.try_into()?;
+			base_query.cond_where(cond);
+		}
+
+		if Self::SOFTDELETED {
+			base_query.and_where(Expr::col(StructureIden::IsDeleted).eq(false));
+		}
+
+		let mut count_query = Query::select();
+		count_query.from(Self::table_ref());
+
+		count_query.expr_as(Expr::col(Asterisk).count(), Alias::new("total_count"));
+
+		let (count_sql, count_values) = count_query.build_sqlx(PostgresQueryBuilder);
+		let total_count_row = sqlx::query_with(&count_sql, count_values)
+			.fetch_one(db)
+			.await?;
+
+		let total_count: i64 = total_count_row.get("total_count");
+
+		let list_options = compute_list_options(list_options)?;
+		list_options.apply_to_sea_query(&mut base_query);
+
+		let (sql, values) = base_query.build_sqlx(PostgresQueryBuilder);
+		let entities = sqlx::query_as_with::<_, Structure, _>(&sql, values)
+			.fetch_all(db)
+			.await?;
+
+		// Return the result
+		Ok(ListResult {
+			total_count: total_count as usize,
+			items: entities,
+		})
 	}
 
 	pub async fn update(

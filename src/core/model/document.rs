@@ -8,13 +8,16 @@ use modql::field::{Fields, HasFields};
 use modql::filter::{
 	FilterNodes, ListOptions, OpValsInt64, OpValsString, OpValsValue,
 };
-use sea_query::{Expr, Iden, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
+
+use super::base::ListResult;
+use super::idens::DocumentIden;
 
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
@@ -39,6 +42,11 @@ pub struct Document {
 pub struct DocumentForRequest {
 	pub separator_id: i64,
 	pub name: Option<String>,
+}
+
+#[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
+pub struct DocumentForRename {
+	pub name: String,
 }
 
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
@@ -109,15 +117,12 @@ pub struct DocumentFilter {
 	mtime: Option<OpValsValue>,
 }
 
-#[derive(Iden)]
-enum DocumentIden {
-	ArchiveId,
-}
-
 pub struct DocumentBmc;
 
 impl DbBmc for DocumentBmc {
 	const TABLE: &'static str = "document";
+	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = true;
 }
 
 impl DocumentBmc {
@@ -150,7 +155,7 @@ impl DocumentBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<DocumentFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Document>> {
+	) -> Result<ListResult<Document>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 
@@ -174,6 +179,29 @@ impl DocumentBmc {
 
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
 		base::delete::<Self>(ctx, mm, id).await
+	}
+
+	pub async fn rename(
+		_ctx: &Ctx,
+		mm: &ModelManager,
+		id: i64,
+		new_name: String,
+	) -> Result<()> {
+		let db = mm.db();
+
+		let mut query = Query::update();
+		query
+			.table(Self::table_ref())
+			.value(DocumentIden::Name, new_name)
+			.and_where(Expr::col(DocumentIden::Id).eq(id));
+
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+		let _count = sqlx::query_with(&sql, values)
+			.execute(db)
+			.await?
+			.rows_affected();
+
+		Ok(())
 	}
 
 	pub async fn get_documents_by_archive<E>(

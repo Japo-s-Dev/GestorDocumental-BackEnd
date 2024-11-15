@@ -14,6 +14,8 @@ use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Index {
@@ -71,6 +73,8 @@ pub struct IndexBmc;
 
 impl DbBmc for IndexBmc {
 	const TABLE: &'static str = "index";
+	const TIMESTAMPED: bool = false;
+	const SOFTDELETED: bool = true;
 }
 
 impl IndexBmc {
@@ -93,7 +97,7 @@ impl IndexBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<IndexFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Index>> {
+	) -> Result<ListResult<Index>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 

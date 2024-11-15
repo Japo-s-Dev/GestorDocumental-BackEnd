@@ -14,6 +14,8 @@ use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Archive {
@@ -86,6 +88,8 @@ pub struct ArchiveBmc;
 
 impl DbBmc for ArchiveBmc {
 	const TABLE: &'static str = "archive";
+	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = true;
 }
 
 impl ArchiveBmc {
@@ -115,7 +119,7 @@ impl ArchiveBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<ArchiveFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Archive>> {
+	) -> Result<ListResult<Archive>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 

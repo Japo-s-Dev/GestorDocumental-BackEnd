@@ -1,4 +1,5 @@
 use crate::core::ctx::Ctx;
+use crate::core::model::base::ListResult;
 use crate::core::model::index::{
 	Index, IndexBmc, IndexFilter, IndexForCreate, IndexForUpdate,
 };
@@ -23,7 +24,7 @@ pub async fn list_indexes(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<IndexFilter>,
-) -> Result<Vec<Index>> {
+) -> Result<ListResult<Index>> {
 	let indexes =
 		IndexBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
 

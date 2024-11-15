@@ -12,6 +12,8 @@ use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct ArchiveComment {
@@ -66,7 +68,9 @@ pub struct ArchiveCommentFilter {
 pub struct ArchiveCommentBmc;
 
 impl DbBmc for ArchiveCommentBmc {
-	const TABLE: &'static str = "comment";
+	const TABLE: &'static str = "archive_comment";
+	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = true;
 }
 
 impl ArchiveCommentBmc {
@@ -99,10 +103,11 @@ impl ArchiveCommentBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<ArchiveCommentFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<ArchiveComment>> {
+	) -> Result<ListResult<ArchiveComment>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 
+	#[allow(unused)]
 	pub async fn update(
 		ctx: &Ctx,
 		mm: &ModelManager,
@@ -111,7 +116,7 @@ impl ArchiveCommentBmc {
 	) -> Result<()> {
 		base::update::<Self, _>(ctx, mm, id, comment_u).await
 	}
-
+	#[allow(unused)]
 	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
 		base::delete::<Self>(ctx, mm, id).await
 	}

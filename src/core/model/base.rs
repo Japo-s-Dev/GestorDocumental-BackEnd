@@ -5,20 +5,19 @@ use crate::utils::time::now_utc;
 use modql::field::{Field, Fields, HasFields};
 use modql::filter::{FilterGroups, ListOptions};
 use modql::SIden;
+use sea_query::Asterisk;
 use sea_query::{
-	Condition, Expr, Iden, IntoIden, PostgresQueryBuilder, Query, TableRef,
+	Alias, Condition, Expr, Iden, IntoIden, PostgresQueryBuilder, Query, TableRef,
 };
 use sea_query_binder::SqlxBinder;
+use serde::Serialize;
 use sqlx::postgres::PgRow;
-use sqlx::FromRow;
+use sqlx::{FromRow, Row};
+
+use super::idens::CommonIden;
 
 const LIST_LIMIT_DEFAULT: i64 = 1000;
 const LIST_LIMIT_MAX: i64 = 5000;
-
-#[derive(Iden)]
-pub enum CommonIden {
-	Id,
-}
 
 #[derive(Iden)]
 pub enum TimestampIden {
@@ -28,11 +27,26 @@ pub enum TimestampIden {
 	Mtime,
 }
 
+#[derive(Serialize)]
+pub struct ListResult<E> {
+	pub total_count: usize,
+	pub items: Vec<E>,
+}
+
 pub trait DbBmc {
 	const TABLE: &'static str;
+	const SCHEMA: Option<&'static str> = None;
+	const TIMESTAMPED: bool;
+	const SOFTDELETED: bool;
 
 	fn table_ref() -> TableRef {
-		TableRef::Table(SIden(Self::TABLE).into_iden())
+		match Self::SCHEMA {
+			Some(schema) => TableRef::SchemaTable(
+				SIden(schema).into_iden(),
+				SIden(Self::TABLE).into_iden(),
+			),
+			None => TableRef::Table(SIden(Self::TABLE).into_iden()),
+		}
 	}
 }
 
@@ -70,7 +84,9 @@ where
 
 	// -- Prep data
 	let mut fields = data.not_none_fields();
-	add_timestamps_for_create(&mut fields, ctx.user_id());
+	if MC::TIMESTAMPED {
+		add_timestamps_for_create(&mut fields, ctx.user_id());
+	}
 	let (columns, sea_values) = fields.for_sea_insert();
 
 	// -- Build query
@@ -121,7 +137,7 @@ pub async fn list<MC, E, F>(
 	mm: &ModelManager,
 	filter: Option<F>,
 	list_options: Option<ListOptions>,
-) -> Result<Vec<E>>
+) -> Result<ListResult<E>>
 where
 	MC: DbBmc,
 	F: Into<FilterGroups>,
@@ -130,25 +146,54 @@ where
 {
 	let db = mm.db();
 
-	let mut query = Query::select();
-	query.from(MC::table_ref()).columns(E::field_column_refs());
+	// Build the base query
+	let mut base_query = Query::select();
+	base_query
+		.from(MC::table_ref())
+		.columns(E::field_column_refs());
 
 	if let Some(filter) = filter {
 		let filters: FilterGroups = filter.into();
 		let cond: Condition = filters.try_into()?;
-		query.cond_where(cond);
+		base_query.cond_where(cond);
 	}
 
+	if MC::SOFTDELETED {
+		base_query.and_where(Expr::col(CommonIden::IsDeleted).eq(false));
+	}
+
+	// Clone the base query for counting
+	// Build a separate count query
+	let mut count_query = Query::select();
+	count_query.from(MC::table_ref());
+
+	// Modify the count query to select COUNT(*)
+	count_query.expr_as(Expr::col(Asterisk).count(), Alias::new("total_count"));
+
+	// Build and execute the count query
+	let (count_sql, count_values) = count_query.build_sqlx(PostgresQueryBuilder);
+	let total_count_row = sqlx::query_with(&count_sql, count_values)
+		.fetch_one(db)
+		.await?;
+
+	// Use the `get` method to retrieve the total count
+	let total_count: i64 = total_count_row.get("total_count");
+
+	// Apply limit and offset to the base query
 	let list_options = compute_list_options(list_options)?;
+	list_options.apply_to_sea_query(&mut base_query);
 
-	list_options.apply_to_sea_query(&mut query);
-
-	let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+	// Build and execute the original query
+	let (sql, values) = base_query.build_sqlx(PostgresQueryBuilder);
 	let entities = sqlx::query_as_with::<_, E, _>(&sql, values)
 		.fetch_all(db)
 		.await?;
 
-	Ok(entities)
+	// Return the result
+	Ok(ListResult {
+		total_count: total_count as usize,
+		items: entities,
+	})
 }
 
 pub async fn update<MC, E>(
@@ -164,7 +209,9 @@ where
 	let db = mm.db();
 
 	let mut fields = data.not_none_fields();
-	add_timestamps_for_update(&mut fields, ctx.user_id());
+	if MC::TIMESTAMPED {
+		add_timestamps_for_update(&mut fields, ctx.user_id());
+	}
 	let fields = fields.for_sea_update();
 
 	let mut query = Query::update();
@@ -188,8 +235,35 @@ where
 		Ok(())
 	}
 }
+async fn soft_delete<MC>(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
+where
+	MC: DbBmc,
+{
+	let db = mm.db();
 
-pub async fn delete<MC>(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
+	let mut query = Query::update();
+	query
+		.table(MC::table_ref())
+		.value(CommonIden::IsDeleted, true)
+		.and_where(Expr::col(CommonIden::Id).eq(id));
+
+	let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+	let count = sqlx::query_with(&sql, values)
+		.execute(db)
+		.await?
+		.rows_affected();
+
+	if count == 0 {
+		Err(Error::EntityNotFound {
+			entity: MC::TABLE,
+			id,
+		})
+	} else {
+		Ok(())
+	}
+}
+
+async fn phisical_delete<MC>(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
 where
 	MC: DbBmc,
 {
@@ -213,6 +287,17 @@ where
 		})
 	} else {
 		Ok(())
+	}
+}
+
+pub async fn delete<MC>(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
+where
+	MC: DbBmc,
+{
+	if MC::SOFTDELETED {
+		soft_delete::<MC>(ctx, mm, id).await
+	} else {
+		phisical_delete::<MC>(ctx, mm, id).await
 	}
 }
 

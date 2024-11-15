@@ -14,6 +14,8 @@ use sqlx::postgres::PgRow;
 use sqlx::types::time::OffsetDateTime;
 use sqlx::FromRow;
 
+use super::base::ListResult;
+
 #[serde_as]
 #[derive(Clone, Fields, FromRow, Debug, Serialize)]
 pub struct Value {
@@ -88,6 +90,8 @@ pub struct ValueBmc;
 
 impl DbBmc for ValueBmc {
 	const TABLE: &'static str = "value";
+	const TIMESTAMPED: bool = true;
+	const SOFTDELETED: bool = false;
 }
 
 impl ValueBmc {
@@ -118,7 +122,7 @@ impl ValueBmc {
 		mm: &ModelManager,
 		filters: Option<Vec<ValueFilter>>,
 		list_options: Option<ListOptions>,
-	) -> Result<Vec<Value>> {
+	) -> Result<ListResult<Value>> {
 		base::list::<Self, _, _>(ctx, mm, filters, list_options).await
 	}
 

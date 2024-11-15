@@ -1,9 +1,10 @@
 use std::time::Duration;
 
 use crate::core::ctx::Ctx;
+use crate::core::model::base::ListResult;
 use crate::core::model::document::{
-	Document, DocumentBmc, DocumentFilter, DocumentForCreate, DocumentForRequest,
-	DocumentForUpdate,
+	Document, DocumentBmc, DocumentFilter, DocumentForCreate, DocumentForRename,
+	DocumentForRequest, DocumentForUpdate,
 };
 use crate::core::model::separator::SeparatorBmc;
 use crate::core::model::ModelManager;
@@ -49,7 +50,7 @@ pub async fn list_documents(
 	ctx: Ctx,
 	mm: ModelManager,
 	params: ParamsList<DocumentFilter>,
-) -> Result<Vec<Document>> {
+) -> Result<ListResult<Document>> {
 	let documents =
 		DocumentBmc::list(&ctx, &mm, params.filters, params.list_options).await?;
 
@@ -113,6 +114,19 @@ pub async fn delete_document(
 
 	let document = DocumentBmc::get(&ctx, &mm, id).await?;
 	DocumentBmc::delete(&ctx, &mm, id).await?;
+
+	Ok(document)
+}
+
+pub async fn rename_document(
+	ctx: Ctx,
+	mm: ModelManager,
+	params: ParamsForUpdate<DocumentForRename>,
+) -> Result<Document> {
+	let ParamsForUpdate { id, data } = params;
+
+	DocumentBmc::rename(&ctx, &mm, id, data.name).await?;
+	let document = DocumentBmc::get(&ctx, &mm, id).await?;
 
 	Ok(document)
 }

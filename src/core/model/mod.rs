@@ -2,20 +2,24 @@
 
 pub mod archive;
 pub mod archive_comment;
-pub mod archive_event;
-mod base;
+pub mod associated_privilege;
+pub mod base;
 pub mod bucket;
 pub mod datatype;
 pub mod document;
 pub mod document_comment;
 pub mod error;
+pub mod event;
+mod idens;
 pub mod index;
 pub mod modql_utils;
+pub mod privilege;
 pub mod role;
 pub mod search_operations;
 pub mod separator;
 mod store;
 pub mod structure;
+pub mod structure_privilege;
 pub mod user;
 pub mod value;
 

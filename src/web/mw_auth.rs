@@ -1,8 +1,9 @@
 use crate::auth::token::{validate_web_token, Token};
 use crate::core::ctx::Ctx;
+use crate::core::model::associated_privilege::AssociatedPrivilegeBmc;
 use crate::core::model::user::{UserBmc, UserForAuth};
 use crate::core::model::ModelManager;
-use crate::web::{set_token_cookie, AUTH_TOKEN};
+use crate::web::{set_privileges_cookie, set_token_cookie, AUTH_TOKEN, PRIVILEGES};
 use crate::web::{Error, Result};
 use async_trait::async_trait;
 use axum::body::Body;
@@ -41,7 +42,8 @@ pub async fn mw_ctx_resolve(
 	if ctx_ext_result.is_err()
 		&& !matches!(ctx_ext_result, Err(CtxExtError::TokenNotInCookie))
 	{
-		cookies.remove(Cookie::from(AUTH_TOKEN))
+		cookies.remove(Cookie::from(AUTH_TOKEN));
+		cookies.remove(Cookie::from(PRIVILEGES));
 	}
 
 	// Store the ctx_result in the request extension.
@@ -60,12 +62,26 @@ async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResul
 	// -- Parse Token
 	let token: Token = token.parse().map_err(|_| CtxExtError::TokenWrongFormat)?;
 
+	let tmp_ctx = Ctx::root_ctx();
+
 	// -- Get UserForAuth
-	let user: UserForAuth =
-		UserBmc::first_by_username(&Ctx::root_ctx(), &mm, &token.ident)
-			.await
-			.map_err(|ex| CtxExtError::ModelAccessError(ex.to_string()))?
-			.ok_or(CtxExtError::UserNotFound)?;
+	let user: UserForAuth = UserBmc::first_by_username(&tmp_ctx, &mm, &token.ident)
+		.await
+		.map_err(|ex| CtxExtError::ModelAccessError(ex.to_string()))?
+		.ok_or(CtxExtError::UserNotFound)?;
+
+	let privileges = AssociatedPrivilegeBmc::list_by_role_name(
+		&tmp_ctx,
+		&mm,
+		&user.assigned_role,
+	)
+	.await
+	.map_err(|ex| CtxExtError::ModelAccessError(ex.to_string()))?;
+
+	let privilege_ids: Vec<i64> = privileges
+		.iter()
+		.map(|privilege| privilege.privilege_id)
+		.collect();
 
 	// -- Validate Token
 	validate_web_token(&token, user.token_salt)
@@ -75,8 +91,11 @@ async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResul
 	set_token_cookie(cookies, &user.username, user.token_salt)
 		.map_err(|_| CtxExtError::CannotSetTokenCookie)?;
 
+	set_privileges_cookie(cookies, &privilege_ids)
+		.map_err(|_| CtxExtError::CannotSetPrivilegesCookie)?;
+
 	// -- Create CtxExtResult
-	Ctx::new(user.id)
+	Ctx::new(user.id, privilege_ids)
 		.map(CtxW)
 		.map_err(|ex| CtxExtError::CtxCreateFail(ex.to_string()))
 }
@@ -115,6 +134,7 @@ pub enum CtxExtError {
 	ModelAccessError(String),
 	FailValidate,
 	CannotSetTokenCookie,
+	CannotSetPrivilegesCookie,
 
 	CtxNotInRequestExt,
 	CtxCreateFail(String),

@@ -2,15 +2,16 @@ use std::collections::HashMap;
 
 use crate::core::ctx::Ctx;
 use crate::core::model::archive::Archive;
-use crate::core::model::archive_event::ArchiveEventFilter;
+//use crate::core::model::archive_event::ArchiveEventFilter;
+use crate::core::model::base::ListResult;
 use crate::core::model::document::{Document, DocumentBmc};
 use crate::core::model::index::IndexFilter;
 use crate::core::model::search_operations::{
-	ArchiveIndexFilter, EventWithUsername, IndexWithDatatype, SearchBmc,
+	ArchiveIndexFilter, IndexWithDatatype, SearchBmc,
 };
 use crate::core::model::separator::{Separator, SeparatorBmc};
 use crate::core::model::ModelManager;
-use crate::rpc::params::{ParamsIded, ParamsList};
+use crate::rpc::params::{ParamsIded, ParamsList, Paramslist};
 use crate::rpc::Result;
 use futures::future::BoxFuture;
 use futures::FutureExt;
@@ -44,29 +45,13 @@ pub async fn get_project_fields(
 pub async fn search_archives(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsList<ArchiveIndexFilter>,
-) -> Result<Vec<Archive>> {
+	params: Paramslist<ArchiveIndexFilter>,
+) -> Result<ListResult<Archive>> {
 	let archives =
 		SearchBmc::search_archives(&ctx, &mm, params.filters, params.list_options)
 			.await?;
 
 	Ok(archives)
-}
-
-pub async fn get_events_with_filters(
-	ctx: Ctx,
-	mm: ModelManager,
-	params: ParamsList<ArchiveEventFilter>,
-) -> Result<Vec<EventWithUsername>> {
-	let events = SearchBmc::get_events_with_filters(
-		&ctx,
-		&mm,
-		params.filters,
-		params.list_options,
-	)
-	.await?;
-
-	Ok(events)
 }
 
 pub fn build_tree(
