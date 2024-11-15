@@ -6,9 +6,7 @@ use crate::core::model::associated_privilege::{
 };
 use crate::core::model::base::ListResult;
 use crate::core::model::ModelManager;
-use crate::rpc::params::{
-	IdList, ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList,
-};
+use crate::rpc::params::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
 use crate::rpc::Result;
 
 pub async fn create_associated_privilege(
@@ -62,6 +60,7 @@ pub async fn get_associated_privilege(
 	Ok(association)
 }
 
+#[allow(unused)]
 pub async fn update_associated_privilege(
 	ctx: Ctx,
 	mm: ModelManager,

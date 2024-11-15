@@ -34,6 +34,12 @@ pub struct StructurePrivilegeForSearchByUser {
 	pub user_id: i64,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StructuresForAct {
+	pub user_id: i64,
+	pub ids: Vec<i64>,
+}
+
 #[allow(dead_code)]
 pub trait StructurePrivilegeBy:
 	HasFields + for<'r> FromRow<'r, PgRow> + Unpin + Send
@@ -124,14 +130,20 @@ impl StructurePrivilegeBmc {
 		base::delete::<Self>(ctx, mm, id).await
 	}
 
-	pub async fn enable(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
+	pub async fn enable(
+		_ctx: &Ctx,
+		mm: &ModelManager,
+		user_id: i64,
+		pid: i64,
+	) -> Result<()> {
 		let db = mm.db();
 
 		let mut query = Query::update();
 		query
 			.table(Self::table_ref())
 			.value(StructurePrivilegeIden::IsEnabled, true)
-			.and_where(Expr::col(StructurePrivilegeIden::Id).eq(id));
+			.and_where(Expr::col(StructurePrivilegeIden::UserId).eq(user_id))
+			.and_where(Expr::col(StructurePrivilegeIden::ProjectId).eq(pid));
 
 		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
 		let count = sqlx::query_with(&sql, values)
@@ -142,21 +154,27 @@ impl StructurePrivilegeBmc {
 		if count == 0 {
 			Err(Error::EntityNotFound {
 				entity: Self::TABLE,
-				id,
+				id: pid,
 			})
 		} else {
 			Ok(())
 		}
 	}
 
-	pub async fn disable(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
+	pub async fn disable(
+		_ctx: &Ctx,
+		mm: &ModelManager,
+		user_id: i64,
+		pid: i64,
+	) -> Result<()> {
 		let db = mm.db();
 
 		let mut query = Query::update();
 		query
 			.table(Self::table_ref())
 			.value(StructurePrivilegeIden::IsEnabled, false)
-			.and_where(Expr::col(StructurePrivilegeIden::Id).eq(id));
+			.and_where(Expr::col(StructurePrivilegeIden::UserId).eq(user_id))
+			.and_where(Expr::col(StructurePrivilegeIden::ProjectId).eq(pid));
 
 		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
 		let count = sqlx::query_with(&sql, values)
@@ -167,7 +185,7 @@ impl StructurePrivilegeBmc {
 		if count == 0 {
 			Err(Error::EntityNotFound {
 				entity: Self::TABLE,
-				id,
+				id: pid,
 			})
 		} else {
 			Ok(())
