@@ -2,10 +2,13 @@ use crate::core::ctx::Ctx;
 use crate::core::model::associated_privilege::{
 	AssociatedPrivilege, AssociatedPrivilegeBmc, AssociatedPrivilegeFilter,
 	AssociatedPrivilegeForOp, AssociatedPrivilegeForSearchByRole,
+	AssociatedPrivilegesForOp,
 };
 use crate::core::model::base::ListResult;
 use crate::core::model::ModelManager;
-use crate::rpc::params::{ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList};
+use crate::rpc::params::{
+	IdList, ParamsForCreate, ParamsForUpdate, ParamsIded, ParamsList,
+};
 use crate::rpc::Result;
 
 pub async fn create_associated_privilege(
@@ -89,25 +92,45 @@ pub async fn delete_associated_privilege(
 pub async fn enable_associated_privilege(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsIded,
-) -> Result<AssociatedPrivilege> {
-	let ParamsIded { id } = params;
+	params: ParamsForCreate<AssociatedPrivilegesForOp>,
+) -> Result<Vec<AssociatedPrivilege>> {
+	let ParamsForCreate { data } = params;
+	let mut enabled_privileges = Vec::new();
 
-	AssociatedPrivilegeBmc::enable(&ctx, &mm, id).await?;
-	let association = AssociatedPrivilegeBmc::get(&ctx, &mm, id).await?;
+	for id in data.ids {
+		AssociatedPrivilegeBmc::enable(&ctx, &mm, &data.role_name, id).await?;
+		let association = AssociatedPrivilegeBmc::get_on_role_and_id(
+			&ctx,
+			&mm,
+			&data.role_name,
+			id,
+		)
+		.await?;
+		enabled_privileges.push(association);
+	}
 
-	Ok(association)
+	Ok(enabled_privileges)
 }
 
 pub async fn disable_associated_privilege(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsIded,
-) -> Result<AssociatedPrivilege> {
-	let ParamsIded { id } = params;
+	params: ParamsForCreate<AssociatedPrivilegesForOp>,
+) -> Result<Vec<AssociatedPrivilege>> {
+	let ParamsForCreate { data } = params;
+	let mut disabled_privileges = Vec::new();
 
-	AssociatedPrivilegeBmc::disable(&ctx, &mm, id).await?;
-	let association = AssociatedPrivilegeBmc::get(&ctx, &mm, id).await?;
+	for id in data.ids {
+		AssociatedPrivilegeBmc::disable(&ctx, &mm, &data.role_name, id).await?;
+		let association = AssociatedPrivilegeBmc::get_on_role_and_id(
+			&ctx,
+			&mm,
+			&data.role_name,
+			id,
+		)
+		.await?;
+		disabled_privileges.push(association);
+	}
 
-	Ok(association)
+	Ok(disabled_privileges)
 }

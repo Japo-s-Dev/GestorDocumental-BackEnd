@@ -285,10 +285,10 @@ pub async fn exec_rpc(
 			exec_rpc_fn!(list_structure_privileges_by_user_id, ctx, mm, rpc_params)
 		}
 		"disable_structure_privilege" => {
-			exec_rpc_fn!(disable_structure_privilege, ctx, mm, rpc_params)
+			exec_rpc_fn!(disable_structure_privileges, ctx, mm, rpc_params)
 		}
 		"enable_structure_privilege" => {
-			exec_rpc_fn!(enable_structure_privilege, ctx, mm, rpc_params)
+			exec_rpc_fn!(enable_structure_privileges, ctx, mm, rpc_params)
 		}
 		// -- Fallback error
 		_ => return Err(Error::RpcMethodUnknown(rpc_method)),
