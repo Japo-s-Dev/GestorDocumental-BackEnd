@@ -62,9 +62,8 @@ async fn main() -> Result<()> {
 	let mm = ModelManager::new().await?;
 
 	// -- Define Routes
-	let route_healthcheck = Router::new()
-		.route("/healthcheck", get(|| async { Html("I'm alive") }))
-		.route_layer(middleware::from_fn(mw_ctx_require));
+	let route_healthcheck =
+		Router::new().route("/healthcheck", get(|| async { Html("I'm alive") }));
 
 	let routes_rpc = routes_rpc::routes(mm.clone())
 		.route_layer(middleware::from_fn(mw_ctx_require));
