@@ -4,7 +4,7 @@ use crate::core::model::ModelManager;
 use crate::core::model::{Error, Result};
 use modql::field::{Fields, HasFields};
 use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsString};
-use sea_query::{Expr, PostgresQueryBuilder, Query};
+use sea_query::{ConditionalStatement, Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -32,6 +32,12 @@ pub struct AssociatedPrivilegeForOp {
 #[derive(Clone, Fields, FromRow, Debug, Serialize, Deserialize)]
 pub struct AssociatedPrivilegeForSearchByRole {
 	pub role_name: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AssociatedPrivilegesForOp {
+	pub role_name: String,
+	pub ids: Vec<i64>,
 }
 
 #[allow(dead_code)]
@@ -67,6 +73,31 @@ impl AssociatedPrivilegeBmc {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 
+	pub async fn get_on_role_and_id(
+		_ctx: &Ctx,
+		mm: &ModelManager,
+		role_name: &str,
+		pid: i64,
+	) -> Result<AssociatedPrivilege> {
+		let db = mm.db();
+
+		let mut query = Query::select();
+
+		query
+			.from(Self::table_ref())
+			.columns(AssociatedPrivilege::field_idens())
+			.and_where(Expr::col(AssociatedPrivilegeIden::RoleName).eq(role_name))
+			.and_where(Expr::col(AssociatedPrivilegeIden::PrivilegeId).eq(pid));
+
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+		let association =
+			sqlx::query_as_with::<_, AssociatedPrivilege, _>(&sql, values)
+				.fetch_one(db)
+				.await?;
+
+		Ok(association)
+	}
+
 	pub async fn list_by_role_name(
 		_ctx: &Ctx,
 		mm: &ModelManager,
@@ -82,11 +113,12 @@ impl AssociatedPrivilegeBmc {
 			.and_where(Expr::col(CommonIden::IsDeleted).eq(false));
 
 		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
-		let role = sqlx::query_as_with::<_, AssociatedPrivilege, _>(&sql, values)
-			.fetch_all(db)
-			.await?;
+		let association =
+			sqlx::query_as_with::<_, AssociatedPrivilege, _>(&sql, values)
+				.fetch_all(db)
+				.await?;
 
-		Ok(role)
+		Ok(association)
 	}
 
 	pub async fn create(
@@ -118,14 +150,20 @@ impl AssociatedPrivilegeBmc {
 		base::update::<Self, _>(ctx, mm, id, datatype_u).await
 	}
 
-	pub async fn enable(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
+	pub async fn enable(
+		_ctx: &Ctx,
+		mm: &ModelManager,
+		role_name: &str,
+		pid: i64,
+	) -> Result<()> {
 		let db = mm.db();
 
 		let mut query = Query::update();
 		query
 			.table(Self::table_ref())
 			.value(AssociatedPrivilegeIden::IsEnabled, true)
-			.and_where(Expr::col(AssociatedPrivilegeIden::Id).eq(id));
+			.and_where(Expr::col(AssociatedPrivilegeIden::RoleName).eq(role_name))
+			.and_where(Expr::col(AssociatedPrivilegeIden::PrivilegeId).eq(pid));
 
 		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
 		let count = sqlx::query_with(&sql, values)
@@ -136,21 +174,27 @@ impl AssociatedPrivilegeBmc {
 		if count == 0 {
 			Err(Error::EntityNotFound {
 				entity: Self::TABLE,
-				id,
+				id: pid,
 			})
 		} else {
 			Ok(())
 		}
 	}
 
-	pub async fn disable(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()> {
+	pub async fn disable(
+		_ctx: &Ctx,
+		mm: &ModelManager,
+		role_name: &str,
+		pid: i64,
+	) -> Result<()> {
 		let db = mm.db();
 
 		let mut query = Query::update();
 		query
 			.table(Self::table_ref())
 			.value(AssociatedPrivilegeIden::IsEnabled, false)
-			.and_where(Expr::col(AssociatedPrivilegeIden::Id).eq(id));
+			.and_where(Expr::col(AssociatedPrivilegeIden::RoleName).eq(role_name))
+			.and_where(Expr::col(AssociatedPrivilegeIden::PrivilegeId).eq(pid));
 
 		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
 		let count = sqlx::query_with(&sql, values)
@@ -161,7 +205,7 @@ impl AssociatedPrivilegeBmc {
 		if count == 0 {
 			Err(Error::EntityNotFound {
 				entity: Self::TABLE,
-				id,
+				id: pid,
 			})
 		} else {
 			Ok(())

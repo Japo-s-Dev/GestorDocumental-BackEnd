@@ -426,7 +426,7 @@ RETURNS TRIGGER AS $$
 BEGIN
     -- Force `is_deleted` to TRUE if `role_name` is 'ADMIN'
     IF NEW.role_name = 'ADMIN' THEN
-        NEW.is_deleted := TRUE;
+        NEW.is_enabled := TRUE;
     END IF;
 
     RETURN NEW;

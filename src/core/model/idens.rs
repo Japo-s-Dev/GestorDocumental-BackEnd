@@ -70,6 +70,7 @@ pub enum AssociatedPrivilegeIden {
 	Table,
 	Id,
 	RoleName,
+	#[iden = "privilege_id"]
 	PrivilegeId,
 	IsEnabled,
 }

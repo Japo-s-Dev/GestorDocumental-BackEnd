@@ -3,7 +3,7 @@ use crate::core::model::structure_privilege::{
 	StructurePrivilege, StructurePrivilegeBmc,
 };
 use crate::core::model::ModelManager;
-use crate::rpc::params::ParamsIded;
+use crate::rpc::params::{IdList, ParamsIded};
 use crate::rpc::Result;
 
 pub async fn list_structure_privileges_by_user_id(
@@ -30,28 +30,36 @@ pub async fn get_structure_privilege(
 	Ok(association)
 }
 
-pub async fn enable_structure_privilege(
+pub async fn enable_structure_privileges(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsIded,
-) -> Result<StructurePrivilege> {
-	let ParamsIded { id } = params;
+	params: IdList,
+) -> Result<Vec<StructurePrivilege>> {
+	let IdList { ids } = params;
+	let mut enabled_privileges = Vec::new();
 
-	StructurePrivilegeBmc::enable(&ctx, &mm, id).await?;
-	let association = StructurePrivilegeBmc::get(&ctx, &mm, id).await?;
+	for id in ids {
+		StructurePrivilegeBmc::enable(&ctx, &mm, id).await?;
+		let association = StructurePrivilegeBmc::get(&ctx, &mm, id).await?;
+		enabled_privileges.push(association);
+	}
 
-	Ok(association)
+	Ok(enabled_privileges)
 }
 
-pub async fn disable_structure_privilege(
+pub async fn disable_structure_privileges(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: ParamsIded,
-) -> Result<StructurePrivilege> {
-	let ParamsIded { id } = params;
+	params: IdList,
+) -> Result<Vec<StructurePrivilege>> {
+	let IdList { ids } = params;
+	let mut disabled_privileges = Vec::new();
 
-	StructurePrivilegeBmc::disable(&ctx, &mm, id).await?;
-	let association = StructurePrivilegeBmc::get(&ctx, &mm, id).await?;
+	for id in ids {
+		StructurePrivilegeBmc::disable(&ctx, &mm, id).await?;
+		let association = StructurePrivilegeBmc::get(&ctx, &mm, id).await?;
+		disabled_privileges.push(association);
+	}
 
-	Ok(association)
+	Ok(disabled_privileges)
 }
