@@ -4,7 +4,7 @@ use crate::core::model::ModelManager;
 use crate::core::model::{Error, Result};
 use modql::field::{Fields, HasFields};
 use modql::filter::{FilterNodes, ListOptions, OpValsInt64, OpValsString};
-use sea_query::{ConditionalStatement, Expr, PostgresQueryBuilder, Query};
+use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;

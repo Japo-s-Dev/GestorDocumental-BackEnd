@@ -133,3 +133,17 @@ pub async fn disable_associated_privilege(
 
 	Ok(disabled_privileges)
 }
+
+pub async fn list_enabled_privileges(
+	ctx: Ctx,
+	mm: ModelManager,
+	params: ParamsForCreate<AssociatedPrivilegeForSearchByRole>,
+) -> Result<Vec<AssociatedPrivilege>> {
+	let ParamsForCreate { data } = params;
+
+	let permissions =
+		AssociatedPrivilegeBmc::list_enabled_permissions(&ctx, &mm, &data.role_name)
+			.await?;
+
+	Ok(permissions)
+}

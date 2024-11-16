@@ -70,19 +70,6 @@ async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResul
 		.map_err(|ex| CtxExtError::ModelAccessError(ex.to_string()))?
 		.ok_or(CtxExtError::UserNotFound)?;
 
-	let privileges = AssociatedPrivilegeBmc::list_enabled_permissions(
-		&tmp_ctx,
-		&mm,
-		&user.assigned_role,
-	)
-	.await
-	.map_err(|ex| CtxExtError::ModelAccessError(ex.to_string()))?;
-
-	let privilege_ids: Vec<i64> = privileges
-		.iter()
-		.map(|privilege| privilege.privilege_id)
-		.collect();
-
 	// -- Validate Token
 	validate_web_token(&token, user.token_salt)
 		.map_err(|_| CtxExtError::FailValidate)?;
@@ -91,11 +78,8 @@ async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResul
 	set_token_cookie(cookies, &user.username, user.token_salt)
 		.map_err(|_| CtxExtError::CannotSetTokenCookie)?;
 
-	set_privileges_cookie(cookies, &privilege_ids)
-		.map_err(|_| CtxExtError::CannotSetPrivilegesCookie)?;
-
 	// -- Create CtxExtResult
-	Ctx::new(user.id, privilege_ids)
+	Ctx::new(user.id)
 		.map(CtxW)
 		.map_err(|ex| CtxExtError::CtxCreateFail(ex.to_string()))
 }
