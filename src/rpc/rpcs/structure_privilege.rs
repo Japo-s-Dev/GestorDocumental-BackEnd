@@ -1,9 +1,9 @@
 use crate::core::ctx::Ctx;
 use crate::core::model::structure_privilege::{
-	StructurePrivilege, StructurePrivilegeBmc,
+	StructurePrivilege, StructurePrivilegeBmc, StructuresForAct,
 };
 use crate::core::model::ModelManager;
-use crate::rpc::params::{IdList, ParamsIded};
+use crate::rpc::params::{ParamsForCreate, ParamsIded};
 use crate::rpc::Result;
 
 pub async fn list_structure_privileges_by_user_id(
@@ -33,14 +33,20 @@ pub async fn get_structure_privilege(
 pub async fn enable_structure_privileges(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: IdList,
+	params: ParamsForCreate<StructuresForAct>,
 ) -> Result<Vec<StructurePrivilege>> {
-	let IdList { ids } = params;
+	let ParamsForCreate { data } = params;
 	let mut enabled_privileges = Vec::new();
 
-	for id in ids {
-		StructurePrivilegeBmc::enable(&ctx, &mm, id).await?;
-		let association = StructurePrivilegeBmc::get(&ctx, &mm, id).await?;
+	for id in data.ids {
+		StructurePrivilegeBmc::enable(&ctx, &mm, data.user_id, id).await?;
+		let association = StructurePrivilegeBmc::get_on_user_and_project_id(
+			&ctx,
+			&mm,
+			data.user_id,
+			id,
+		)
+		.await?;
 		enabled_privileges.push(association);
 	}
 
@@ -50,16 +56,22 @@ pub async fn enable_structure_privileges(
 pub async fn disable_structure_privileges(
 	ctx: Ctx,
 	mm: ModelManager,
-	params: IdList,
+	params: ParamsForCreate<StructuresForAct>,
 ) -> Result<Vec<StructurePrivilege>> {
-	let IdList { ids } = params;
-	let mut disabled_privileges = Vec::new();
+	let ParamsForCreate { data } = params;
+	let mut enabled_privileges = Vec::new();
 
-	for id in ids {
-		StructurePrivilegeBmc::disable(&ctx, &mm, id).await?;
-		let association = StructurePrivilegeBmc::get(&ctx, &mm, id).await?;
-		disabled_privileges.push(association);
+	for id in data.ids {
+		StructurePrivilegeBmc::disable(&ctx, &mm, data.user_id, id).await?;
+		let association = StructurePrivilegeBmc::get_on_user_and_project_id(
+			&ctx,
+			&mm,
+			data.user_id,
+			id,
+		)
+		.await?;
+		enabled_privileges.push(association);
 	}
 
-	Ok(disabled_privileges)
+	Ok(enabled_privileges)
 }
