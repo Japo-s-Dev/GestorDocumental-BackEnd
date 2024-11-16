@@ -74,6 +74,31 @@ impl StructurePrivilegeBmc {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 
+	pub async fn get_on_user_and_project_id(
+		_ctx: &Ctx,
+		mm: &ModelManager,
+		user_id: i64,
+		pid: i64,
+	) -> Result<StructurePrivilege> {
+		let db = mm.db();
+
+		let mut query = Query::select();
+
+		query
+			.from(Self::table_ref())
+			.columns(StructurePrivilege::field_idens())
+			.and_where(Expr::col(StructurePrivilegeIden::UserId).eq(user_id))
+			.and_where(Expr::col(StructurePrivilegeIden::ProjectId).eq(pid));
+
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+		let association =
+			sqlx::query_as_with::<_, StructurePrivilege, _>(&sql, values)
+				.fetch_one(db)
+				.await?;
+
+		Ok(association)
+	}
+
 	pub async fn list_by_user_id(
 		_ctx: &Ctx,
 		mm: &ModelManager,

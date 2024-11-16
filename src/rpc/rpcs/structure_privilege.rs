@@ -40,7 +40,13 @@ pub async fn enable_structure_privileges(
 
 	for id in data.ids {
 		StructurePrivilegeBmc::enable(&ctx, &mm, data.user_id, id).await?;
-		let association = StructurePrivilegeBmc::get(&ctx, &mm, id).await?;
+		let association = StructurePrivilegeBmc::get_on_user_and_project_id(
+			&ctx,
+			&mm,
+			data.user_id,
+			id,
+		)
+		.await?;
 		enabled_privileges.push(association);
 	}
 
@@ -57,7 +63,13 @@ pub async fn disable_structure_privileges(
 
 	for id in data.ids {
 		StructurePrivilegeBmc::disable(&ctx, &mm, data.user_id, id).await?;
-		let association = StructurePrivilegeBmc::get(&ctx, &mm, id).await?;
+		let association = StructurePrivilegeBmc::get_on_user_and_project_id(
+			&ctx,
+			&mm,
+			data.user_id,
+			id,
+		)
+		.await?;
 		enabled_privileges.push(association);
 	}
 
