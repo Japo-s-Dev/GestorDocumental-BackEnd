@@ -301,6 +301,41 @@ where
 	}
 }
 
+pub async fn restore<MC>(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
+where
+	MC: DbBmc,
+{
+	if MC::SOFTDELETED {
+		let db = mm.db();
+
+		let mut query = Query::update();
+		query
+			.table(MC::table_ref())
+			.value(CommonIden::IsDeleted, false)
+			.and_where(Expr::col(CommonIden::Id).eq(id));
+
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+		let count = sqlx::query_with(&sql, values)
+			.execute(db)
+			.await?
+			.rows_affected();
+
+		if count == 0 {
+			Err(Error::EntityNotFound {
+				entity: MC::TABLE,
+				id,
+			})
+		} else {
+			Ok(())
+		}
+	} else {
+		Err(Error::UnrecoverableItem {
+			entity: MC::TABLE,
+			id,
+		})
+	}
+}
+
 pub fn add_timestamps_for_create(fields: &mut Fields, user_id: i64) {
 	let now = now_utc();
 	fields.push(Field::new(TimestampIden::Cid.into_iden(), user_id.into()));
