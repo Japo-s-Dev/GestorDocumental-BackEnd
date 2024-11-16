@@ -301,6 +301,7 @@ where
 	}
 }
 
+#[allow(unused)]
 pub async fn restore<MC>(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<()>
 where
 	MC: DbBmc,

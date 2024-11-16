@@ -21,6 +21,7 @@ pub enum EventIden {
 	AdditionalInfo,
 }
 
+#[allow(unused)]
 #[derive(Iden)]
 pub enum DocumentIden {
 	#[iden = "document"]
@@ -30,6 +31,7 @@ pub enum DocumentIden {
 	ArchiveId,
 }
 
+#[allow(unused)]
 #[derive(Iden)]
 enum RoleIden {
 	Id,
@@ -64,6 +66,7 @@ pub enum DatatypeIden {
 	DatatypeName,
 }
 
+#[allow(unused)]
 #[derive(Iden)]
 pub enum AssociatedPrivilegeIden {
 	#[iden = "associated_privilege"]
@@ -75,6 +78,7 @@ pub enum AssociatedPrivilegeIden {
 	IsEnabled,
 }
 
+#[allow(unused)]
 #[derive(Iden)]
 pub enum StructurePrivilegeIden {
 	#[iden = "structure_privilege"]
@@ -85,6 +89,7 @@ pub enum StructurePrivilegeIden {
 	IsEnabled,
 }
 
+#[allow(unused)]
 #[derive(Iden)]
 pub enum StructureIden {
 	#[iden = "structure"]
