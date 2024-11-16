@@ -1,5 +1,6 @@
 use crate::auth::pwd::{self, ContentToHash, SchemeStatus};
 use crate::core::ctx::Ctx;
+use crate::core::model::associated_privilege::AssociatedPrivilegeBmc;
 use crate::core::model::user::{UserBmc, UserForLogin};
 use crate::core::model::ModelManager;
 use crate::web::{remove_token_cookie, set_token_cookie, Error, Result};

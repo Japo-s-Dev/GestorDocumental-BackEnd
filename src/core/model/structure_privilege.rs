@@ -131,6 +131,7 @@ impl StructurePrivilegeBmc {
 		Ok(datatype_id)
 	}
 
+	#[allow(unused)]
 	pub async fn list(
 		ctx: &Ctx,
 		mm: &ModelManager,

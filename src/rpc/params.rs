@@ -20,11 +20,6 @@ pub struct ParamsIded {
 	pub id: i64,
 }
 
-#[derive(Deserialize)]
-pub struct IdList {
-	pub ids: Vec<i64>,
-}
-
 #[serde_as]
 #[derive(Deserialize)]
 pub struct ParamsList<F>

@@ -3,7 +3,6 @@ use super::mw_auth::CtxW;
 use crate::core::ctx::Ctx;
 use crate::core::model::ModelManager;
 use crate::rpc::{exec_rpc, File, RpcRequest};
-use crate::web_config;
 use axum::extract::{Multipart, State};
 use axum::response::{IntoResponse, Response};
 use axum::routing::post;
