@@ -70,7 +70,7 @@ async fn _ctx_resolve(mm: State<ModelManager>, cookies: &Cookies) -> CtxExtResul
 		.map_err(|ex| CtxExtError::ModelAccessError(ex.to_string()))?
 		.ok_or(CtxExtError::UserNotFound)?;
 
-	let privileges = AssociatedPrivilegeBmc::list_by_role_name(
+	let privileges = AssociatedPrivilegeBmc::list_enabled_permissions(
 		&tmp_ctx,
 		&mm,
 		&user.assigned_role,

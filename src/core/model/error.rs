@@ -24,6 +24,11 @@ pub enum Error {
 		id: String,
 	},
 
+	UnrecoverableItem {
+		entity: &'static str,
+		id: i64,
+	},
+
 	UnknownDatatype(String),
 	UnknownIndexId(i64),
 	InvalidValue(String),

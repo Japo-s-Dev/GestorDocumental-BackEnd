@@ -121,6 +121,30 @@ impl AssociatedPrivilegeBmc {
 		Ok(association)
 	}
 
+	pub async fn list_enabled_permissions(
+		_ctx: &Ctx,
+		mm: &ModelManager,
+		role_name: &str,
+	) -> Result<Vec<AssociatedPrivilege>> {
+		let db = mm.db();
+
+		let mut query = Query::select();
+		query
+			.from(Self::table_ref())
+			.columns(AssociatedPrivilege::field_idens())
+			.and_where(Expr::col(AssociatedPrivilegeIden::RoleName).eq(role_name))
+			.and_where(Expr::col(AssociatedPrivilegeIden::IsEnabled).eq(true))
+			.and_where(Expr::col(CommonIden::IsDeleted).eq(false));
+
+		let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+		let association =
+			sqlx::query_as_with::<_, AssociatedPrivilege, _>(&sql, values)
+				.fetch_all(db)
+				.await?;
+
+		Ok(association)
+	}
+
 	pub async fn create(
 		ctx: &Ctx,
 		mm: &ModelManager,
