@@ -209,7 +209,7 @@ impl SearchBmc {
 
 			// Adjust casting based on datatype_id and cast both sides.
 			match datatype_id {
-				3 => {
+				1 => {
 					// TEXT
 					if !eq_values.is_empty() {
 						for value in eq_values {
@@ -223,7 +223,7 @@ impl SearchBmc {
 						return Err(Error::UnsupportedDatatype(index_id));
 					}
 				}
-				4 => {
+				2 => {
 					// NUMERIC
 					if !eq_values.is_empty() {
 						for value in eq_values {
@@ -261,7 +261,7 @@ impl SearchBmc {
 						}
 					}
 				}
-				5 => {
+				3 => {
 					// TIMESTAMP stored as mm-dd-yyyy
 					let date_format = "YYYY-MM-DD";
 					if !eq_values.is_empty() {
