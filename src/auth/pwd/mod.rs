@@ -102,32 +102,112 @@ impl FromStr for PwdParts {
 // region:    --- Tests
 #[cfg(test)]
 mod tests {
-	use super::*;
-	use anyhow::Result;
+    use super::*;
+    use anyhow::Result;
+    use uuid::Uuid;
 
-	#[tokio::test]
-	async fn test_multi_scheme_ok() -> Result<()> {
-		// -- Setup & Fixtures
-		let fx_salt = Uuid::parse_str("fa00ff8e-1757-490e-8856-1c046ef7ae80")?;
-		let fx_to_hash = ContentToHash {
-			content: "welcome".to_string(),
-			salt: fx_salt,
-		};
+    #[tokio::test]
+    async fn test_multi_scheme_ok() -> Result<()> {
+        // -- Setup & Fixtures
+        let fx_salt = Uuid::parse_str("fa00ff8e-1757-490e-8856-1c046ef7ae80")?;
+        let fx_to_hash = ContentToHash {
+            content: "welcome".to_string(),
+            salt: fx_salt,
+        };
 
-		// -- Exec
-		let pwd_hashed = hash_for_scheme("02", fx_to_hash.clone())?;
-		let pwd_validate =
-			validate_pwd(fx_to_hash.clone(), pwd_hashed.clone()).await?;
+        // -- Exec
+        let pwd_hashed = hash_for_scheme("02", fx_to_hash.clone())?;
+        let pwd_validate = validate_pwd(fx_to_hash.clone(), pwd_hashed.clone()).await?;
 
-		println!("Contraseña final {}", pwd_hashed.clone());
+        // -- Check that the status is `SchemeStatus::Outdated` because the scheme is not the default.
+        assert!(
+            matches!(pwd_validate, SchemeStatus::Outdated),
+            "status should be SchemeStatus::Outdated"
+        );
 
-		// -- Check
-		assert!(
-			matches!(pwd_validate, SchemeStatus::Outdated),
-			"status should be SchemeStatus::Outdated"
-		);
+        Ok(())
+    }
 
-		Ok(())
-	}
+    #[tokio::test]
+    async fn test_hash_pwd_ok() -> Result<()> {
+        // -- Setup & Fixtures
+        let fx_salt = Uuid::new_v4();
+        let fx_to_hash = ContentToHash {
+            content: "password123".to_string(),
+            salt: fx_salt,
+        };
+
+        // -- Exec
+        let hashed_pwd = hash_pwd(fx_to_hash.clone()).await?;
+
+        // -- Check
+        assert!(hashed_pwd.starts_with("#"), "The hash should contain the scheme identifier.");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_validate_pwd_ok() -> Result<()> {
+        // -- Setup & Fixtures
+        let fx_salt = Uuid::new_v4();
+        let fx_to_hash = ContentToHash {
+            content: "password123".to_string(),
+            salt: fx_salt,
+        };
+
+        // -- Hash the password first
+        let hashed_pwd = hash_pwd(fx_to_hash.clone()).await?;
+
+        // -- Validate the password
+        let validation_result = validate_pwd(fx_to_hash, hashed_pwd.clone()).await?;
+
+        // -- Check
+        assert!(
+            matches!(validation_result, SchemeStatus::Ok),
+            "The status should be SchemeStatus::Ok for the default scheme"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_validate_pwd_outdated_scheme() -> Result<()> {
+        // -- Setup & Fixtures
+        let fx_salt = Uuid::new_v4();
+        let fx_to_hash = ContentToHash {
+            content: "password123".to_string(),
+            salt: fx_salt,
+        };
+
+        // -- Hash the password with a different scheme
+        let hashed_pwd = hash_for_scheme("02", fx_to_hash.clone())?;
+
+        // -- Validate using the default scheme (should return Outdated)
+        let validation_result = validate_pwd(fx_to_hash, hashed_pwd.clone()).await?;
+
+        // -- Check
+        assert!(
+            matches!(validation_result, SchemeStatus::Outdated),
+            "The status should be SchemeStatus::Outdated for non-default schemes"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_invalid_password_validation() -> Result<()> {
+        // -- Setup & Fixtures
+        let fx_salt = Uuid::new_v4();
+        let fx_to_hash = ContentToHash {
+            content: "password123".to_string(),
+            salt: fx_salt,
+        };
+
+        // -- Use an incorrect password hash reference
+        let invalid_hashed_pwd = "#01#invalid_hash".to_string();
+
+        // -- Validate with the wrong hash (should fail)
+        let validation_result = validate_pwd(fx_to_hash, invalid_hashed_pwd).await;
+
+        // -- Check that validation fails
+        assert!(validation_result.is_err(), "Validation should fail for invalid password hash");
+        Ok(())
+    }
 }
-// endregion: --- Tests

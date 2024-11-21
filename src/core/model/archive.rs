@@ -141,3 +141,98 @@ impl ArchiveBmc {
 		base::delete::<Self>(ctx, mm, id).await
 	}
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::ctx::Ctx;
+    use crate::core::model::{ModelManager, Result};
+    use crate::core::model::store::new_db_pool;
+    use sqlx::{Pool, Postgres};
+
+    // Esta función prepara el contexto y el ModelManager para las pruebas
+    async fn setup() -> (Ctx, ModelManager) {
+        // Creación del pool de la base de datos
+        let pool = new_db_pool().await.unwrap(); // Asume que el pool se inicializa correctamente
+
+        // Inicializa el ModelManager con el pool de conexiones
+        let mm = ModelManager::new().await.unwrap();
+
+        // Crea un contexto de prueba, por ejemplo, con un user_id ficticio
+        let ctx = Ctx::new(1).unwrap(); // Ajustar según la implementación correcta de Ctx
+
+        (ctx, mm)
+    }
+
+    #[tokio::test]
+    async fn test_create_archive() {
+        let (ctx, mm) = setup().await;
+
+        // Datos de prueba para crear un archivo
+        let archive_data = ArchiveForCreate {
+            project_id: 1, // Cambia según tus datos de prueba
+            tag: "Nuevo archivo de prueba".to_string(),
+        };
+
+        let result = ArchiveBmc::create(&ctx, &mm, archive_data).await;
+        assert!(result.is_ok(), "La creación del archivo debería ser exitosa");
+        let archive_id = result.unwrap();
+
+        assert!(archive_id > 0, "El ID del archivo debería ser mayor a 0");
+    }
+
+    #[tokio::test]
+    async fn test_get_archive() {
+        let (ctx, mm) = setup().await;
+
+        // ID del archivo de prueba
+        let archive_id = 1; // Cambia esto según los datos existentes en tu base de datos
+
+        let result = ArchiveBmc::get(&ctx, &mm, archive_id).await;
+        assert!(result.is_ok(), "Debería obtener el archivo correctamente");
+
+        let archive = result.unwrap();
+        assert_eq!(archive.id, archive_id, "El ID del archivo debería coincidir");
+    }
+
+    #[tokio::test]
+    async fn test_list_archives() {
+        let (ctx, mm) = setup().await;
+
+        // Sin filtros para esta prueba
+        let filters: Option<Vec<ArchiveFilter>> = None;
+        let list_options: Option<ListOptions> = None;
+
+        let result = ArchiveBmc::list(&ctx, &mm, filters, list_options).await;
+        assert!(result.is_ok(), "Debería listar los archivos correctamente");
+
+        let archives = result.unwrap();
+        assert!(!archives.is_empty(), "La lista de archivos no debería estar vacía");
+    }
+
+    #[tokio::test]
+    async fn test_update_archive() {
+        let (ctx, mm) = setup().await;
+
+        // ID del archivo a actualizar
+        let archive_id = 1; // Cambia esto según los datos existentes en tu base de datos
+
+        // Datos de prueba para actualizar
+        let update_data = ArchiveForUpdate {
+            tag: "Etiqueta actualizada".to_string(),
+        };
+
+        let result = ArchiveBmc::update(&ctx, &mm, archive_id, update_data).await;
+        assert!(result.is_ok(), "La actualización del archivo debería ser exitosa");
+    }
+
+    #[tokio::test]
+    async fn test_delete_archive() {
+        let (ctx, mm) = setup().await;
+
+        // ID del archivo a eliminar
+        let archive_id = 1; // Cambia esto según los datos existentes en tu base de datos
+
+        let result = ArchiveBmc::delete(&ctx, &mm, archive_id).await;
+        assert!(result.is_ok(), "La eliminación del archivo debería ser exitosa");
+    }
+}

@@ -121,3 +121,95 @@ impl ArchiveCommentBmc {
 		base::delete::<Self>(ctx, mm, id).await
 	}
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::ctx::Ctx;
+    use crate::core::model::{ModelManager, Result};
+    use crate::core::model::base::DbBmc;
+    use crate::core::model::store::new_db_pool;
+    use sqlx::{Pool, Postgres};
+
+	async fn setup() -> (Ctx, ModelManager) {
+		// Creación del pool de la base de datos
+		let pool: Pool<Postgres> = new_db_pool().await.unwrap(); // Usamos unwrap para simplificar en las pruebas
+	
+		// Inicializamos `ModelManager` con el pool de la base de datos
+		let mm = ModelManager::new().await.unwrap(); // Ajustar según la implementación correcta de `ModelManager::new`
+	
+		// Inicialización de `Ctx` con el argumento necesario. Ajusta el valor de `user_id` según tu implementación.
+		let ctx = Ctx::new(1).unwrap(); // Se pasa `1` como ID de usuario o lo que sea necesario.
+	
+		(ctx, mm)
+	}
+
+    #[tokio::test]
+    async fn test_create_archive_comment() {
+        let (ctx, mm) = setup().await;
+
+        // Datos de prueba para el comentario
+        let comment = ArchiveCommentForOp {
+            text: "Este es un comentario de prueba".to_string(),
+            archive_id: 1, // Cambia este ID según tus datos de prueba
+        };
+
+        let result = ArchiveCommentBmc::create(&ctx, &mm, comment).await;
+        assert!(result.is_ok(), "La creación del comentario debería ser exitosa");
+    }
+
+    #[tokio::test]
+    async fn test_get_archive_comment() {
+        let (ctx, mm) = setup().await;
+
+        // ID del comentario de prueba
+        let comment_id = 1; // Cambia esto según tus datos
+
+        let result = ArchiveCommentBmc::get(&ctx, &mm, comment_id).await;
+        assert!(result.is_ok(), "Debería obtener el comentario correctamente");
+
+        let comment = result.unwrap();
+        assert_eq!(comment.id, comment_id, "El ID del comentario debería coincidir");
+    }
+
+    #[tokio::test]
+    async fn test_update_archive_comment() {
+        let (ctx, mm) = setup().await;
+
+        // ID del comentario a actualizar
+        let comment_id = 1; // Cambia esto según tus datos
+
+        // Datos actualizados para el comentario
+        let updated_comment = ArchiveCommentForOp {
+            text: "Este es un comentario actualizado".to_string(),
+            archive_id: 1, // Cambia esto según tus datos
+        };
+
+        let result = ArchiveCommentBmc::update(&ctx, &mm, comment_id, updated_comment).await;
+        assert!(result.is_ok(), "La actualización del comentario debería ser exitosa");
+    }
+
+    #[tokio::test]
+    async fn test_delete_archive_comment() {
+        let (ctx, mm) = setup().await;
+
+        // ID del comentario a eliminar
+        let comment_id = 1; // Cambia esto según tus datos
+
+        let result = ArchiveCommentBmc::delete(&ctx, &mm, comment_id).await;
+        assert!(result.is_ok(), "La eliminación del comentario debería ser exitosa");
+    }
+
+    #[tokio::test]
+    async fn test_list_archive_comments() {
+        let (ctx, mm) = setup().await;
+
+        let filters: Option<Vec<ArchiveCommentFilter>> = None; // Sin filtros en esta prueba
+        let list_options: Option<ListOptions> = None; // Opciones por defecto
+
+        let result = ArchiveCommentBmc::list(&ctx, &mm, filters, list_options).await;
+        assert!(result.is_ok(), "Debería listar los comentarios correctamente");
+
+        let comments = result.unwrap();
+        assert!(!comments.is_empty(), "Debería haber al menos un comentario en la lista");
+    }
+}

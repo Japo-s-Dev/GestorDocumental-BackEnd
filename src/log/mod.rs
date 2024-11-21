@@ -77,3 +77,24 @@ struct RequestLogLine {
 	error_type: Option<String>,
 	error_data: Option<Value>,
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::{
+        http::{Method, Uri},
+    };
+    use uuid::Uuid;
+
+    #[tokio::test]
+    async fn test_log_request_no_errors() {
+        // Simplifying by providing direct values
+        let uuid = Uuid::new_v4();
+        let req_method = Method::GET;
+        let uri: Uri = "/test/uri".parse().unwrap();
+        
+        // Directly calling the function without complex contexts or errors
+        assert!(log_request(uuid, req_method, uri, None, None, None, None).await.is_ok());
+    }
+
+
+}
